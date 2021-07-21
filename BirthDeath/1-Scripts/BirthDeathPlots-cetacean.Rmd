@@ -1,0 +1,174 @@
+---
+title: "BirthDeathPlots -cetacean dataset"
+output: html_notebook
+---
+
+```{r setup, include=FALSE}
+# Libraries needed
+rm(list=ls())
+all.lib<-c("ape","diversitree","phytools", "hisse","ggplot2","gridExtra","ggpubr","numDeriv","reshape2","ggthemes","scales") # add libraries here
+lapply(all.lib,require,character.only=TRUE)
+
+#color palette-black
+cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7","#CC6666", "#9999CC", "#66CC99","#999999")
+```
+
+#Cetacean dataset only
+#set the working directory and parameters
+```{r}
+setwd("/Users/nhans/DiversificationPaper/Diversification2020")
+n.step<-15000
+k.vec<- 2^seq(1,9,by=1)
+sizeofk.vec<-length(k.vec)
+
+# 20% burn in to discard
+burn.dis<-(0.2*n.step)
+
+# Thinning the MCMC chain
+thin<-sequence((n.step-burn.dis)/10,1,10) # thinning interval - 10
+l.thin<-length(thin)
+
+#parameters for each model
+
+```
+ 
+# Birth death model on cetacean
+```{r}
+# Loading the dataset
+# cloned dataset combined AND remove burnin  #discard 20% burnin
+cloned.data<-read.csv("clonebd_15000_Jul21.csv")[3001:15000,2:19]
+
+# posterior AND remove burnin  #discard 20% burnin
+posterior.data<-read.csv("posteriorbd_15000_Jul21.csv")[3001:15000,3:4]
+
+# empty matrix
+temp.dat<-matrix(NA,ncol=2,nrow = l.thin,dimnames =list(as.character(1:l.thin),c("lambda","mu")))
+
+# thinning and separating the clone dataset (thinning interval=10)
+count<-0
+for (k in k.vec){
+  rowcount<-0
+  for (t in thin){
+    rowcount<-rowcount+1
+    temp.dat[rowcount,]<-as.matrix(cloned.data[t,(count+1):(count+2)])
+    }
+  count<-count+2
+  assign(paste("samples",k,sep=""),temp.dat)
+}
+# Thinning posterior dataset
+temp.dat<-matrix(NA,ncol=2,nrow = l.thin,dimnames =list(as.character(1:l.thin),c("lambda","mu")))
+rowcount<-0
+for (t in thin){
+  rowcount<-rowcount+1
+  temp.dat[rowcount,]<-as.matrix(posterior.data[t,])
+}
+thinned.postdata<-temp.dat
+max.eigen.bd<-max(eigen(var(thinned.postdata))$values)
+
+```
+
+# post mcmc burnin discard and thining
+```{r}
+# Separating lambda and mu
+# matrix for lambda
+all.lambda<-matrix(NA,nrow=l.thin,ncol=length(k.vec),dimnames=list(as.character(1:l.thin),as.character(k.vec)))
+# matrix for mu
+all.mu<-matrix(NA,nrow=l.thin,ncol=length(k.vec),dimnames=list(as.character(1:l.thin),as.character(k.vec)))
+              
+colcount<-0
+for(k in k.vec){
+  colcount<-colcount+1
+  tempsamples<-eval(parse(text=paste("samples",k,sep="")))
+  all.lambda[,colcount]<-tempsamples[,1]
+  all.mu[,colcount]<-tempsamples[,2]
+}
+
+
+melted.lambda<-melt(all.lambda)
+melted.mu<-melt(all.mu)
+names(melted.lambda)<-c("i","value","rate")
+names(melted.mu)<-c("i","value","rate")
+head(melted.lambda)
+head(melted.mu)
+meltformat<-rbind(melted.lambda,melted.mu)
+
+# Marginal variances
+lambda<-apply(all.lambda,2,var)
+mu<-apply(all.mu,2,var)
+melt.var.bd<-melt(rbind(lambda,mu))
+colnames(melt.var.bd)<- c("Rates" , "clone" ,"value")
+
+# eigenvalues
+eig.all.bd<-vector(length=9)
+i<-0
+for (k in k.vec){
+  i<-i+1
+  samples.mat<-eval(parse(text=paste("samples", k,sep="")))
+  eig.all.bd[i] <- eigen(cov(samples.mat))$values[1]/max.eigen.bd
+}
+
+all.eig<-data.frame(k.vec,eig.all.bd)
+```
+
+
+##BirthDeath plots here. 
+```{r birthdeath, echo=FALSE}
+# Density plots with semi-transparent fill
+#all.rates<-melt(samples.noprior)
+source("multipleplot.R")
+#lambda
+p1<-ggplot(melted.lambda, aes(x=rate)) + 
+  geom_density(alpha=.5,fill="#E69F00")+
+  facet_wrap(~ value)+
+  ggtitle("Speciation Rates")+
+  xlab(expression(lambda))+
+  ylab("Probability Density")+
+  theme_pubclean()
+  #theme(plot.title = element_text(size=14),axis.text.y=element_blank(),axis.title.x=element_text(size = 14),axis.title.y=element_text(size = 14))
+
+#mu
+p2<-ggplot(melted.mu, aes(x=rate)) +
+  geom_density(alpha=.5,fill="#56B4E9")+
+  facet_wrap(~ value)+
+  ggtitle("Extinction Rates")+
+  xlim(0,0.01)+
+  ylim(0,300)+
+  xlab(expression(mu))+
+  ylab("Probability Density") +
+  theme_pubclean()
+#theme(plot.title = element_text(size=14),axis.text.y=element_blank(),axis.title.x=element_text(size = 14),axis.title.y=element_text(size = 14))
+
+favcol<-c("slateblue4","lightsalmon4","skyblue4","lightseagreen","red4","aquamarine4")
+#mvariance
+p3<-ggplot(data=melt.var.bd, aes(x=clone,y=value,group=Rates,colour=Rates,shape=Rates)) +
+    geom_line(size=1) +
+    geom_point(size=2)+
+    ggtitle("Birth-Death model")+
+  xlab("number of clones")+
+  ylab("Marginal variance ")+
+   scale_colour_manual(values=favcol)+
+  theme_pubclean()
+  #  theme(plot.title = element_text(size=14),axis.text.y=element_blank(),axis.title.x=element_text(size = 14),axis.title.y=element_text(size = 14))
+library(ggplot2)
+favcol<-c("skyblue4","aquamarine4")
+p4<-ggplot(data=all.eig, aes(x=k.vec,y=eig.all.bd)) +
+    geom_line(color="red4",size=1) +
+    geom_point(color="red4",size=3)+
+    ggtitle("Eigenvalues")+
+  xlab("number of clones")+
+  ylab("eigenvalue ")+
+  theme_pubclean()
+  #  theme(plot.title = element_text(size=14),axis.text.y=element_blank(),axis.title.x=element_text(size = 14),axis.title.y=element_text(size = 14))
+
+
+figure5 <- ggarrange(p1, p2, p3, p4,
+                    labels = c("A", "B", "C","D"),
+                    ncol = 2, nrow = 2)
+ggarrange(p1, p2, p3, p4,
+          labels = c("A", "B", "C","D"),
+          ncol = 2, nrow = 2) %>%
+ggexport(filename = "Figure5.jpeg")
+
+ggsave(filename="Figure5_high.png", plot=figure5, device="png",dpi=700)
+
+```
