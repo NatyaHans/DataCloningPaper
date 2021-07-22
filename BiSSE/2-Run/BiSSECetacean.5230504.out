@@ -1,0 +1,17 @@
+/blue/burleigh/nhans/GitHubNH/DataCloning/BiSSE/Scripts
+c0712a-s8.ufhpc
+Tue Jul 20 20:41:58 EDT 2021
+Loading required package: ape
+[1] "Loaded the tree"
+[1] "Ultrametric tree"
+is.binary.tree() is deprecated; using is.binary() instead.
+
+is.binary.tree() will be removed soon: see ?is.binary and update your code.
+[1] "Binary tree"
+[1] "Yay we passed the checks"
+[1] 7482
+[1] "everything checks out"
+[1] "Running Bisse"
+[1] "Starting MCMC"
+[1] "Saving results:No clone"
+Tue Jul 20 21:13:24 EDT 2021
