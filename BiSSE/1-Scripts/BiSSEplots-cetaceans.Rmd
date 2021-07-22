@@ -1,0 +1,249 @@
+---
+title: "BiSSEplots-cetacean"
+output: html_notebook
+---
+
+```{r setup, include=FALSE}
+# Libraries needed
+rm(list=ls())
+all.lib<-c("ape","diversitree","phytools", "hisse","ggplot2","gridExtra","ggpubr","numDeriv","reshape2","ggthemes","scales") # add libraries here
+lapply(all.lib,require,character.only=TRUE)
+
+#colorpalette-black
+cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7","#CC6666", "#9999CC", "#66CC99","#999999")
+```
+
+#Cetacean dataset only
+#set the working directory and parameters
+```{r}
+setwd("/Users/nhans/DiversificationPaper/Diversification2020")
+n.step<-15000
+k.vec<- 2^seq(1,9,by=1)
+sizeofk.vec<-length(k.vec)
+
+# Thinning the MCMC chain
+thin<-sequence((n.step-3000)/10,1,10) # thinning interval - 10
+l.thin<-length(thin)
+
+#parameters for each model
+
+```
+
+## BiSSE Data loading plots
+```{r include=FALSE}
+k.vec<-c(2,4,8,16,32,64,128,256,512)
+bisse.parnames<-c("lambda0","lambda1","mu0","mu1","q01","q10")
+
+# Loading and discarding burnin-20% 
+for (k in k.vec){
+  temp.dat<-read.csv(paste("/Users/nhans/DiversificationPaper/Diversification2020/cetaceans_clone_",k,"_Jul_20_21.csv",sep=""))[3001:15000,2:7]
+  assign(paste("clone.mat.",k,sep=""), temp.dat)
+  colnames(temp.dat)<-bisse.parnames
+}
+
+## Add here means to calculate max.eigen.bisse
+post.mat<-read.csv("cetaceans_posterior_table_Jul_20_21.csv")[3001:15000,2:7]
+
+# thinning the posteriors
+rowcount<-0
+for (t in thin){
+  rowcount<-rowcount+1
+  temp.dat[rowcount,]<-as.matrix(post.mat[t,])
+}
+thin.post.mat<-temp.dat
+
+max.eigen.bisse<-max(eigen(cov(thin.post.mat))$values) 
+
+
+
+
+# Empty vectors declaring
+lambda0.mat.clone<-matrix(NA, ncol=sizeofk.vec, nrow=l.thin,dimnames=list(as.character(1:l.thin),as.character(k.vec)))
+lambda1.mat.clone<-matrix(NA, ncol=sizeofk.vec, nrow=l.thin)
+mu0.mat.clone<-matrix(NA, ncol=sizeofk.vec, nrow=l.thin)
+mu1.mat.clone<-matrix(NA, ncol=sizeofk.vec, nrow=l.thin)
+q01.mat.clone<-matrix(NA, ncol=sizeofk.vec, nrow=l.thin)
+q10.mat.clone<-matrix(NA, ncol=sizeofk.vec, nrow=l.thin)
+
+temp.mat<-matrix(nrow = l.thin,ncol = 6)
+## Saving rates in different matrix
+counter<-0
+for(k in k.vec)
+{
+  counter<-counter+1
+  rowcount<-0
+  for (t in thin){
+     rowcount<-rowcount+1
+     lambda0.mat.clone[rowcount,counter]<-eval(parse(text=paste("clone.mat.",k,"$","lambda0.clone",sep="")))[t]
+     lambda1.mat.clone[rowcount,counter]<-eval(parse(text=paste("clone.mat.",k,"$","lambda1.clone",sep="")))[t]
+     mu0.mat.clone[rowcount,counter]<-eval(parse(text=paste("clone.mat.",k,"$","mu0.clone",sep="")))[t]
+     mu1.mat.clone[rowcount,counter]<-eval(parse(text=paste("clone.mat.",k,"$","mu1.clone",sep="")))[t]
+     q01.mat.clone[rowcount,counter]<-eval(parse(text=paste("clone.mat.",k,"$","q01.clone",sep="")))[t]
+     q10.mat.clone[rowcount,counter]<-eval(parse(text=paste("clone.mat.",k,"$","q10.clone",sep="")))[t]
+     
+     # Thin out the individual clones matrix 
+     temp.mat[rowcount,] <- as.matrix(eval(parse(text=paste("clone.mat.",k,sep = "")))[t,])
+  }
+  colnames(temp.mat)<-bisse.parnames
+  assign(paste("thinnedClone", k ,sep =""), temp.mat)
+}
+
+# Combining
+
+lambda.all<-matrix(NA, ncol=length(k.vec), nrow=2*l.thin,dimnames=list((c(rep("lambda0",l.thin) ,rep("lambda1",l.thin))),as.character(k.vec)))
+mu.all<-matrix(NA, ncol=length(k.vec), nrow=2*l.thin,dimnames=list((c(rep("mu0",l.thin) ,rep("mu1",l.thin))),as.character(k.vec)))
+q.all<-matrix(NA, ncol=length(k.vec), nrow=2*l.thin,dimnames=list((c(rep("q01",l.thin) ,rep("q10",l.thin))),as.character(k.vec)))
+counter<-0
+for(k in k.vec)
+{
+  counter<-counter+1
+  # all lambda together
+  lambda.all[1:l.thin,counter]<-lambda0.mat.clone[,counter]
+  lambda.all[(l.thin+1):(2*l.thin),counter]<-lambda1.mat.clone[,counter]
+  #all mus
+  mu.all[(1:l.thin),counter]<-mu0.mat.clone[,counter]
+  mu.all[(l.thin+1):(2*l.thin),counter]<-mu1.mat.clone[,counter]
+  
+  q.all[(1:l.thin),counter]<-q01.mat.clone[,counter]
+  q.all[(l.thin+1):(2*l.thin),counter]<-q10.mat.clone[,counter]
+}
+
+# Melting for figures : A and B
+melt.lambda<-melt(lambda.all)
+melt.mu<-melt(mu.all)
+
+#Combine
+combined.mat<-rbind(lambda.all,mu.all,q.all) # not required 
+
+# eigen vector amd max covarinace
+eigenvals.cetgg<-vector(length =length(k.vec))
+cov.max.cetgg<-vector(length =length(k.vec))
+
+## marginal variance and mean matrices
+var.mat<-matrix(NA,ncol=6,nrow =length(k.vec), dimnames = list(as.character(k.vec),c("lambda0","lambda1","mu0","mu1","q01","q10")))
+mean.mat<-matrix(NA,ncol=6,nrow =length(k.vec), dimnames = list(as.character(k.vec),c("lambda0","lambda1","mu0","mu1","q01","q10")))
+#Marginal variance for each parameter per clone 
+e.count<-0
+for (k in k.vec){
+  e.count=e.count+1
+  e.temp.cet<-eval(parse(text=paste("thinnedClone",k,sep = "")))
+  # first variance of the covariance mat
+  cov.max.cetgg[e.count]<-cov(e.temp.cet)[1,1] 
+  #first eigen value scaled by max 
+  eigenvals.cetgg[e.count]<-eigen(cov(e.temp.cet))$values[1]/max.eigen.bisse
+  
+## Now calculating variances for each clone
+  mean.mat[e.count,]<-as.numeric(apply(e.temp.cet,2, mean))
+  var.mat[e.count,]<-as.numeric(apply(e.temp.cet,2, var))
+}
+
+dat.eig<-data.frame(k.vec,eigenvals.cetgg)
+dat.var<-melt(var.mat[,1:4])
+colnames(dat.var)<- c("Var1" , "Rates" ,"value")
+#eigenvalues and cov
+
+
+```
+
+## All BiSSE speciation and extinction rates
+```{r}
+#all speciation rates
+
+all.lambda.fig<-ggplot(melt.lambda, aes(x=value,group=Var1,fill=Var1)) + 
+  geom_density(alpha=.5)+
+  facet_wrap(~ Var2)+
+  ggtitle("BiSSE speciation rates")+
+  xlim(0,0.3)+
+  ylim(0,150)+
+  xlab(expression(lambda))+
+  ylab("Probability Density")+
+  scale_fill_manual(values=cbbPalette)+
+  theme(plot.title = element_text(size=22),axis.text.y=element_blank(),axis.title.x=element_text(size = 20),axis.title.y=element_text(size = 20))
+  
+# all extinction rates 
+all.mu.fig<-ggplot(melt.mu, aes(x=value,group=Var1,fill=Var1)) + 
+  geom_density(alpha=.5)+
+  facet_wrap(~ Var2)+
+  ggtitle("BiSSE extinction rates")+
+  xlim(0,0.09)+
+  ylim(0,200)+
+ xlab(expression(mu))+
+  ylab("Probability Density")+
+   scale_fill_manual(values=cbbPalette[6:7])+
+  theme(plot.title = element_text(size=22),axis.text.y=element_blank(),axis.title.x=element_text(size = 20),axis.title.y=element_text(size = 20))
+
+ggsave(filename="All.lambda.png", plot=all.lambda.fig, device="png",dpi=700)
+ggsave(filename="All.mu.png", plot=all.mu.fig, device="png",dpi=700)
+
+```
+
+## Only clone 2 and clone 512
+# Separating clone 2 v/s clone 512 for BiSSE
+```{r}
+#speciation rates
+lambda2.512<-(melt.lambda[which(melt.lambda$Var2==2 | melt.mu$Var2==512 ) , ] )
+colnames(lambda2.512)<-c("Rates" , "Var2" , "value")
+#extinction rates
+mu2.512<-(melt.mu[which(melt.mu$Var2==2 | melt.mu$Var2==512 ) , ] )
+colnames(mu2.512)<-c("Rates" , "Var2" , "value")
+
+b1<-ggplot(lambda2.512, aes(x=value,group=Rates,fill=Rates)) + 
+  geom_density(alpha=.5)+
+  facet_wrap(~ Var2)+
+  ggtitle("BiSSE speciation rates")+
+  xlim(0,0.3)+
+  ylim(0,400)+
+  xlab(expression(lambda))+
+  ylab("Density")+
+  scale_fill_manual(values=c("lightseagreen","lightsalmon4"))+
+  theme_pubclean()
+ # theme(plot.title = element_text(size=15),axis.text.y=element_blank(),axis.title.x=element_text(size = 15),axis.title.y=element_text(size = 15))
+
+b2<-ggplot(mu2.512, aes(x=value,group=Rates,fill=Rates)) + 
+  geom_density(alpha=.5)+
+  facet_wrap(~ Var2)+
+    ggtitle("BiSSE extinction rates")+
+  xlim(0,0.09)+
+  ylim(0,150)+
+ xlab(expression(mu))+
+  ylab("=Density")+
+  scale_fill_manual(values=c("slateblue4","red4"))+
+  theme_pubclean()
+  #theme(plot.title = element_text(size=15),axis.text.y=element_blank(),axis.title.x=element_text(size = 15),axis.title.y=element_text(size = 15))
+
+## BiSSe marginal variance
+
+b3<-ggplot(data=dat.var, aes(x=Var1,y=value,group=Rates,colour=Rates,shape=Rates)) +
+    geom_line(size=1) +
+    geom_point(size=2)+
+    ggtitle("Marginal variance")+
+  xlab("number of clones")+
+  ylab("Marginal variance ")+
+   scale_colour_manual(values=cbbPalette)+
+  theme_pubclean()
+  #  theme(plot.title = element_text(size=14),axis.text.y=element_blank(),axis.title.x=element_text(size = 14),axis.title.y=element_text(size = 14))
+
+#BiSSE eigenvalues and variances together 
+favcol<-c("skyblue4","aquamarine4")
+b4<-ggplot(data=dat.eig, aes(x=k.vec,y=eigenvals.cetgg)) +
+    geom_line(color="aquamarine4",size=1) +
+    geom_point(color="aquamarine4",size=3)+
+    ggtitle("Eigenvalues")+
+  xlab("number of clones")+
+  ylab("eigenvalue ")+
+  theme_pubclean()
+  #  theme(plot.title = element_text(size=15),axis.text.y=element_blank(),axis.title.x=element_text(size = 15),axis.title.y=element_text(size = 15))
+
+
+figure6 <- ggarrange(b1, b2, b3, b4,
+                    labels = c("A", "B", "C","D"),
+                    ncol = 2, nrow = 2)
+
+ggarrange(b1, b2, b3, b4,
+                    labels = c("A", "B", "C","D"),
+                    ncol = 2, nrow = 2) %>%
+ggexport(filename = "Figure6.jpeg")
+ggsave(filename="Figure6_high.png", plot=figure6, device="png",dpi=700)
+
+```
+
