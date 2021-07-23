@@ -349,6 +349,7 @@ ni.dc4<- ggplot(data=dat.eigen, aes(x=k.vec,y=eigen.mat)) +
   ggtitle("Eigenvalues")+
   xlab("number of clones")+
   ylab("Eigenvalues ")+
+  ylim(0,0.8)+
   theme_pubclean()
 figure2 <- ggarrange(ni.dc1,ni.dc2,ni.dc3,ni.dc4,
                     labels = c("A", "B", "C","D"),
