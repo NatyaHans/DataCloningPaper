@@ -1,0 +1,226 @@
+---
+title: "checking identifiability for birth death model 4 taxa dataset"
+output: html_notebook
+---
+```{r setup, include=FALSE}
+# Setting up the R code
+#rm(list=ls())
+
+library(ape)
+library(diversitree)
+library(phytools)
+# colorblind friendly palette from color brewer
+colorblind.purple<-c("#756bb1","#bcbddc","#efedf5","#c994c7","#dd1c77","#e7e1ef","#fde0dd",
+                     "#fa9fb5","#c51b8a")
+cb.blue<-c("#3182bd","#9ecae1","#1c9099","#a6bddb","#2c7fb8")
+cb.gray<-c("#636363","#bdbdbd","#f0f0f0")
+cb.or<-c("#fc9272","#e6550d","#fdae6b","#fee6ce","#d95f0e","#fec44f","#fff7bc")
+cb.gre<-c("#31a354","#addd8e","#f7fcb9","#99d8c9")
+```
+
+Question: Are the simple birth death model identifiable?
+The likelihood in birth death model is calculated is through diversification rate.
+So if we have different speciation and extinction rate combinations but same diversification rate, how does the LTT look like?
+
+```{r Uniform, echo=TRUE,warning=FALSE,message=FALSE}
+# Setting up the parameters
+#-----------------------------------------simulation parameters
+set.seed(753)
+sim<-1000
+n.taxa<-4 # 4 taxa tree
+pars.const<-c(0.3,0.1)
+lineage<-n.taxa
+temp.tree<-tree.bd(pars = pars.const,max.taxa = lineage) 
+temp.tree
+#plot(temp.tree)
+# likelihood
+lik.phy<-make.bd(temp.tree)
+parML<-fit.bd(temp.tree)
+parML
+
+sm1<-plot.phylo(temp.tree,edge.width = 4, font=2,direction = "rightwards",align.tip.label = TRUE,show.tip.label = TRUE,no.margin = TRUE)
+```
+
+```{r echo=TRUE,warning=FALSE,message=FALSE, results='hide'}
+
+# likelihood
+lik.phy<-make.bd(temp.tree)
+parML<-fit.bd(temp.tree)
+parML
+
+# estimating
+parameter<-birthdeath(temp.tree)
+lambda.hat<-parameter$para[2]/(1-parameter$para[1])
+mu.hat<- lambda.hat - parameter$para[2]
+
+p<-starting.point.bd(temp.tree)
+prior.phy<-make.prior.exponential(1/ (2* (p[1] -p[2])))
+
+# Bayesian estimation
+samples.noclone<-mcmc(lik.phy, c(parML$b,parML$d), nsteps = 10000,prior=prior.phy,lower=0, w = c(0.1, 0.1), print.every=1000)
+
+max.eigen.4taxa<-max(eigen(cov(samples.noclone[,2:3]))$values)
+
+# data cloning start here: 
+source(file = "/Users/nhans/4days/hisse/MCMC_clone.R")
+k.vec<- 2^seq(1,9,by=1)
+for(k in k.vec){
+  print(k)
+assign(paste("samples", k, sep="_"),mcmc(lik.phy, c(parML$b,parML$d), nsteps = 10000,prior=prior.phy,lower=0, w = c(0.1, 0.1), print.every=1000, k.clone=k))
+}
+
+```
+```{r}
+# Table 3 prep
+clone.mat.4taxa<-matrix(data=NA,nrow=4,ncol=(length(k.vec)+2))
+
+# Naming columns pretty for table 
+Newcol<-vector(length = length(k.vec))
+count<-0
+for (k in k.vec){
+  count<-count+1
+  Newcol[count]<-paste("Data cloning", k, sep=" ")
+}
+colnames(clone.mat.4taxa)<-c("ML estimate","No clone MCMC",Newcol)
+rownames(clone.mat.4taxa)<-c("lambda","mu", "lik","likD")
+
+# ML estimates
+clone.mat.4taxa[1,1]<-parML$b
+clone.mat.4taxa[2,1]<-parML$d
+clone.mat.4taxa[3,1]<-parML$logL
+clone.mat.4taxa[4,1]<-parML$logL
+
+
+# Bayesian estimates
+
+clone.mat.4taxa[1,2]<-mean(samples.noclone[,2])
+clone.mat.4taxa[2,2]<-mean(samples.noclone[,3])
+clone.mat.4taxa[3,2]<-mean(samples.noclone[,4])
+clone.mat.4taxa[4,2]<-mean(samples.noclone[,4]) # the likelihood is not scaled or it is 1/1*lik
+#-----
+
+# Eigen values
+eig.mat<-vector(length = length(k.vec))
+
+# Marginal variance vecs (make this into mat so it is easy to melt)
+mvar.mat.lambda<-vector(length = length(k.vec))
+mvar.mat.mu<-vector(length = length(k.vec))
+
+counter<-2 # since the first two positions are already filled in the table(modify this code)
+count2<-0 # using for eigen mat and mvar.mat 
+
+for(k in k.vec){
+counter<-counter+1
+count2<-count2+1
+lambda<-eval(parse(text=paste("samples","_",k,sep="")))$lambda
+clone.mat.4taxa[1,counter]<-mean(lambda)
+
+mu<-eval(parse(text=paste("samples","_",k,sep="")))$mu
+clone.mat.4taxa[2,counter]<-mean(mu)
+
+# #temp fpr var/covariance mat and eigen values 
+mat<-cbind(lambda,mu) 
+eig.mat[count2]<-(eigen(var(mat))$values)/max.eigen.4taxa
+mvar.mat.lambda[count2]<-var(lambda)
+mvar.mat.mu[count2]<-var(mu)
+
+# likelihood 
+op<-eval(parse(text=paste("samples","_",k,sep="")))$p
+clone.mat.4taxa[3,counter]<-mean(op)
+
+# scaled likelihood
+op.mean<-mean(op)
+clone.mat.4taxa[4,counter]<-(1/k)*op.mean
+}
+
+library(knitr)
+kable(round(clone.mat.4taxa,4),caption="Data cloning on 4taxa")
+#library(gridExtra)
+#grid.table(round(t(clone.mat.4taxa),digits = 3),theme=ttheme_minimal())
+
+```
+
+#Figures
+```{r}
+library(ggpubr)
+
+# Clones - separate speciation and extinction
+clone512<-samples_512[2:3]
+noclone<-samples.noclone[2:3]
+
+lambda.all<-cbind(samples.noclone[2],samples_512[2])
+colnames(lambda.all)<-c("No clone","Clone 512")
+mu.all<-cbind(samples.noclone[3],samples_512[3])
+colnames(mu.all)<-c("No clone","Clone 512")
+
+melted.lambda<-(melt(lambda.all))
+melted.mu<-(melt(mu.all))
+
+sm2a<-ggplot(melted.lambda, aes(x=value)) + 
+  geom_density(alpha=.5,fill="slateblue4")+
+  facet_wrap(~ variable)+
+  #ggtitle("HiSSE speciation rates")+
+  xlim(0,1)+
+  #ylim(0,20)+
+  ggtitle("Speciation rate")+
+  xlab(expression(lambda))+
+  ylab("Density")+
+  theme_pubclean()
+sm2b<-ggplot(melted.mu, aes(x=value)) + 
+  geom_density(alpha=.5,fill="#56B4E9")+
+  facet_wrap(~ variable)+
+  #ggtitle("HiSSE speciation rates")+
+  xlim(0,0.05)+
+  #ylim(0,20)+
+   ggtitle("Extinction rate")+
+  xlab(expression(mu))+
+  ylab("Density")+
+  theme_pubclean()
+
+sm2 <- ggarrange(sm2a, sm2b,
+                    labels = c("i", "ii"),
+                     nrow = 2)
+
+# Marginal variances
+Lambda<-mvar.mat.lambda
+Mu<-mvar.mat.mu
+bound.rates<-cbind(Lambda,Mu)
+rownames(bound.rates)<-k.vec
+melted.marvar<-melt(bound.rates)
+
+cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+colnames(melted.marvar)<- c("Var1" , "Rates" ,"value")
+sm3<-ggplot(data=melted.marvar, aes(x=Var1,y=value,group=Rates,colour=Rates,shape=Rates)) +
+    geom_line(size=1) +
+    geom_point(size=2)+
+    ggtitle("Marginal variance")+
+  xlab("number of clones")+
+  ylab("Marginal variance ")+
+   scale_colour_manual(values=cbbPalette)+
+  theme_pubclean()
+
+# Eigenvalues
+dat.eigen<-data.frame(k.vec,eig.mat)
+sm4<- ggplot(data=dat.eigen, aes(x=k.vec,y=eig.mat)) +
+  geom_line(color="aquamarine4",size=1) +
+  geom_point(color="aquamarine4",size=3)+
+  ggtitle("Eigenvalues")+
+  xlab("number of clones")+
+  ylab("eigenvalue ")+
+  theme_pubclean()
+
+figure4taxa <- ggarrange(sm2a, sm2b, sm3, sm4,
+                    labels = c("A", "B", "C","D"),
+                    ncol = 2, nrow = 2)
+
+ggsave(filename="Figure4_high.png", plot=figure4taxa, device="png",dpi=700)
+
+```
+
+```{r}
+# Making variance covairance matrix 
+var.kth.post <- var(dc.ni.fit[[1]])
+max.eigen <- max(eigen(var.kth.post)$values)
+eigen.mat[pos]<-eigen(var.kth.post)$values/max.eigen
+```
+

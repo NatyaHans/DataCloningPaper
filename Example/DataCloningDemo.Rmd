@@ -1,0 +1,425 @@
+---
+title: "Data Cloning Demo"
+output:
+  pdf_document: default
+  html_document: default
+---
+```{r setup, include=FALSE }
+knitr::opts_chunk$set(cache = TRUE)
+rm(list=ls())
+all.lib<-c("MASS","rjags","parallel", "dclone","abind","R2WinBUGS","RCurl","reshape2","ggplot2","gridExtra","ggpubr","numDeriv","reshape2","ggthemes","scales","knitr") # add libraries here
+lapply(all.lib,require,character.only=TRUE)
+```
+
+# Demonstrating identifiability
+```{r identifiability, warning=FALSE,echo=TRUE,results='hide'}
+knitr::opts_chunk$set(cache = TRUE)
+
+set.seed(2)
+
+#####--------------------- Model 1 defined 
+DC.exp <- function(){
+  
+# needs:
+  # a vector of observations (Y) 
+  # number of observations(n)
+  # the value of clone, K  
+
+  lam ~dgamma(r,alpha)
+  for(i in 1:len){
+    for(k in 1:K){
+      Y[i,k] ~ dexp(lam) 
+    }  
+  }
+  
+}
+
+#-----Simulate data for n observations:
+set.seed(2)
+n <- 200
+lambda <- 1.5
+Y <- rexp(n=n, rate=lambda)
+K <- 1
+alpha <- 2
+r <- 24
+r/alpha
+1/mean(Y)
+
+out.parms <- c("lam")
+Ymat <- matrix(rep(Y, K), nrow=n,ncol=K, byrow=FALSE)
+bayes.list <- list(Y=Ymat, len=n,alpha=alpha, r=r, K=K)
+
+#---------------#Bayesian fit:
+bayesian.fit <- jags.fit(bayes.list, params=out.parms, model=DC.exp, 
+                         n.chains=3, n.adapt=3000, n.update=1000, n.iter=30000, thin=10)
+summary(bayesian.fit)[[1]]
+NoClone<-as.vector(bayesian.fit[[1]])
+
+
+#---------------#  Straight up MLE for observations:
+lam.hat <- 1/mean(Y)
+lam.hat
+#[1] 1.350414
+
+
+#--------------# Specifying clones
+k.vec<- 2^seq(1,9,by=1) 
+clone.mat<-matrix(NA,nrow = length(k.vec),ncol = 4,dimnames =
+                    list(as.character(k.vec),c("Mean","SD","Naive SE","Time-series SE" ) ))
+
+
+#--------------# Data Cloning
+pos<-0
+for (K in k.vec){
+pos<-pos+1
+Ymat <- matrix(rep(Y, K), nrow=n,ncol=K, byrow=FALSE)
+print(paste("Cloning for clone",K,sep=" "))
+dc.list <- list(Y=Ymat, len=n,alpha=alpha, r=r, K=K)
+dc.fit <- jags.fit(dc.list, params=out.parms, model=DC.exp, 
+                         n.chains=3, n.adapt=3000, n.update=1000, n.iter=30000, thin=10)
+clone.mat[pos,]<-summary(dc.fit)[[1]]
+}
+
+# Save the last clone value
+Clone512<-as.vector(dc.fit[[1]])
+
+```
+
+# Figure for identifiability 
+```{r echo=FALSE,message=FALSE}
+knitr::opts_chunk$set(cache = TRUE) 
+#-------------# Creating figures
+library(reshape2)
+matDC<-melt(data.frame(NoClone,Clone512))
+library(dplyr)
+vline <- summarise(group_by(matDC,variable), mean = mean(value))
+labels <- c(NoClone = "No Clone", Clone512 = "Clone 512")
+
+library(ggpubr)
+#---Not using here----
+#figure1<-ggplot(matDC, aes(x=value)) + 
+#  geom_density(alpha=.75,fill="#0072B2")+
+#  facet_wrap(~ variable,labeller = labeller(variable=labels))+
+#  geom_vline(data=vline, aes(xintercept=mean),
+#             color="slateblue4", linetype="dashed", size=0.5)+
+#  ggtitle("Data cloning demonstration on identifiable model ")+
+#  xlab(expression(lambda))+
+#  ylab("Density")+
+# # xlim(1.25,1.9)+
+#  theme_pubclean()
+#jpeg("figure12020.joeg")
+#plot(figure1)
+#dev.off()
+#-----------
+
+# melting separate
+melted.noclone<-melt(NoClone)
+melted.clone<-melt(Clone512)
+
+# Figure 1A no clone
+dc1<-ggplot(melted.noclone, aes(x=value)) + 
+  geom_density(alpha=.75,fill="#0072B2")+
+  #facet_wrap(~ variable,labeller = labeller(variable=labels))+
+  geom_vline(aes(xintercept=lam.hat),color="slateblue4",linetype="dashed",size=.75)+
+  geom_vline(aes(xintercept=mean(value)),
+             color="slateblue4", linetype="dashed", size=0.75)+
+  ggtitle("No Clone ")+
+  xlab(expression(lambda))+
+  xlim(1,2)+
+  ylim(0,60)+
+  ylab(" Density")+
+  theme_pubclean()
+
+# Figure 1B clone 512
+dc2<-ggplot(melted.clone, aes(x=value)) + 
+  geom_density(alpha=.75,fill="#0072B2")+
+  ggtitle("clone 512")+
+  geom_vline(aes(xintercept=lam.hat),color="slateblue4",linetype="solid",size=.75)+
+  geom_vline(aes(xintercept=mean(value)),
+             color="slateblue4", linetype="dashed", size=0.5)+
+  xlab(expression(lambda))+
+  xlim(1,2)+
+  ylim(0,60)+
+  ylab("Density")+
+  theme_pubclean()
+
+### Figure 1
+figure1<-ggarrange(dc1,dc2,labels = c("A", "B"),nrow = 1)
+figure1
+#--------
+#-----------Theme last colored
+themeLastColored <- ttheme_default(core=list(
+  fg_params=list(fontface=c(rep("plain", 7), "bold.italic")),
+  bg_params = list(fill=c(rep(c("grey95", "grey90"),
+                              length.out=7), "#6BAED6"),
+                   alpha = rep(c(1,0.5), each=8))
+  ))
+
+# High resolution image
+fig1<-ggarrange(dc1,dc2,labels = c("A", "B"),nrow = 1)
+ggsave(filename="Figure1_high.png", plot=fig1, device="png",dpi=500)
+
+ggarrange(dc1,dc2,labels = c("A", "B"),nrow = 1) %>%
+ggexport(filename = "Figure1.jpeg")
+
+
+```
+
+# Table for identifiability
+```{r echo=FALSE,message=FALSE}
+#-------
+library(knitr)
+kable(clone.mat, caption="Data cloning on identifiable model")
+```
+
+
+# Demonstrating non-identifiability
+```{r nonidentifiable , warning=FALSE, echo=TRUE,results='hide'}
+knitr::opts_chunk$set(cache = TRUE)
+
+set.seed(2)
+DC.exp.NI <- function(){
+  
+  # needs:
+  # a vector of observations (Y) 
+  # the length of this vector (n)
+  # the value of K clones
+  
+  # priors for a and b
+  lambda1 ~dgamma(r1,alpha1)
+  lambda2 ~dgamma(r2,alpha2)
+  lam <- lambda1+lambda2
+  
+  for(i in 1:len){
+    for(k in 1:K){
+      Y[i,k] ~ dexp(lam) 
+    }  
+  }
+  
+}
+
+
+#--------------------Simulate data:
+set.seed(20)
+n <- 200
+lambda1 <- 1
+lambda2 <- 0.5
+lambda <- lambda1+lambda2
+Y <- rexp(n=n, rate=lambda)
+1/mean(Y)
+
+K <- 1
+alpha1 <- 2
+r1 <- 24
+alpha2 <- 2
+r2 <- 3
+
+#--------------------  Straight up MLE
+lam.tot.hat <- 1/mean(Y)
+lam.tot.hat
+#[1] 1.350414
+#[1] 1.475948
+#[1] 1.420014
+
+out.parms <- c("lam", "lambda1", "lambda2")
+Ymat <- matrix(rep(Y, K), nrow=n,ncol=K, byrow=FALSE)
+
+bayes.list.ni <- list(Y=Ymat, len=n,alpha1=alpha1, r1=r1, alpha2=alpha2, r2=r2,  K=K)
+bayesian.fit.ni <- jags.fit(bayes.list.ni, params=out.parms, model=DC.exp.NI, 
+                         n.chains=3, n.adapt=3000, n.update=1000, n.iter=30000, thin=10)
+summary(bayesian.fit.ni)[[1]]
+
+# Variance covariance matrix and max eigen values
+var.postr <- var(bayesian.fit.ni[[1]])
+max.eigen <- max(eigen(var.postr)$values)
+
+NoClone.NI<-as.matrix((bayesian.fit.ni)[[1]])
+
+#-------------Setting up clones
+k.vec<- 2^seq(1,9,by=1)
+clone.array<-array(NA,dim = c(3,4,length(k.vec)), dimnames =
+                     list(c("lam","lambda1","lambda2"),c("Mean","SD","Naive SE","Time-series SE" ) ,as.character(k.vec)))
+eigen.mat<-vector(length = length(k.vec))
+
+
+#------------Data Cloning
+pos<-0
+for (K in k.vec){
+  
+  pos<-pos+1
+  out.parms <- c("lam", "lambda1", "lambda2")
+Ymat <- matrix(rep(Y, K), nrow=n,ncol=K, byrow=FALSE)
+dc.ni.list <- list(Y=Ymat, len=n,alpha1=alpha1, r1=r1, alpha2=alpha2, r2=r2,  K=K)
+print(paste("Cloning for clone",K,sep=" "))
+dc.ni.fit <- jags.fit(dc.ni.list, params=out.parms, model=DC.exp.NI, 
+                         n.chains=3, n.adapt=3000, n.update=1000, n.iter=30000, thin=10)
+clone.array[,,pos]<-summary(dc.ni.fit)[[1]]
+var.kth.post <- var(dc.ni.fit[[1]])
+eigen.mat[pos]<-(eigen(var.kth.post)$values)/max.eigen # note here max.eigen is for no cloning data
+
+}
+
+## Accessing the mean from clone.array for all clones
+mean.mat<-matrix(NA,nrow = length(k.vec),ncol = 3,dimnames = list(as.character(k.vec),c("lam","lambda1","lambda2")))
+
+for (i in 1:length(k.vec)){
+  mean.mat[i,]<-t(clone.array[,1,i])
+}
+
+## Accessing standard deviation from the clone.array for all clones
+sd.mat<-matrix(NA,nrow = length(k.vec),ncol = 3,dimnames = list(as.character(k.vec),c("lam","lambda1","lambda2")))
+
+for (i in 1:length(k.vec)){
+  sd.mat[i,]<-t(clone.array[,2,i])
+}
+
+```
+
+
+# Figure for non identifiability 
+```{r echo=FALSE,message=FALSE}
+
+## Figure 2
+library(ggpubr)
+# melting separate No clone
+NoClone.NI<-as.matrix((bayesian.fit.ni)[[1]])
+melted.nocloneNI<-melt(NoClone.NI)
+library(dplyr)
+vline <- summarise(group_by(melted.nocloneNI,Var2), mean = mean(value))
+#labels <- c(lam = "lambda", lambda1-"")
+
+
+# clone 512
+Clone.NI<-as.matrix((dc.ni.fit)[[1]]) # This should have the information about the last clone 512
+melted.cloneNI<-melt(Clone.NI)
+library(dplyr)
+vline.ni <- summarise(group_by(melted.cloneNI,Var2), mean = mean(value))
+#labels <- c(lam = "lambda", lambda1-"")
+
+
+# Figure 2A no clone
+ni.dc1<- ggplot(melted.nocloneNI, aes(x=value)) + 
+  geom_density(alpha=.75,fill="#0072B2")+
+  facet_wrap(~ Var2)+
+   geom_vline(data=filter(melted.nocloneNI, Var2=="lam"),aes(xintercept=lam.tot.hat),color="slateblue4",linetype="dashed",size=.75)+
+  #geom_vline(data=vline, aes(xintercept=mean),
+  #                        color="slateblue4", linetype="dashed", size=0.5)+
+  xlab(expression(lambda))+
+  xlim(0,5)+
+  ylab(" Density")+
+  ggtitle("No Clone ")+
+  theme_pubclean()
+
+
+# Figure 2B clone 512 
+ni.dc2<-ggplot(melted.cloneNI, aes(x=value)) + 
+  geom_density(alpha=.75,fill="#0072B2")+
+  facet_wrap(~ Var2)+
+   geom_vline(data=filter(melted.cloneNI, Var2=="lam"),aes(xintercept=lam.tot.hat),color="slateblue4",linetype="dashed",size=.75)+
+  #geom_vline(data=vline.ni, aes(xintercept=mean),
+  #                        color="slateblue4", linetype="dashed", size=0.5)+
+  xlab(expression(lambda))+
+  xlim(0,5)+
+  ggtitle("clone 512 ")+
+  ylab(" Density")+
+  theme_pubclean()
+
+# Getting variances
+var.mat.ni<-sd.mat**2 # square of sd 
+melted.var.ni<-melt(var.mat.ni)
+colnames(melted.var.ni)<- c("Var1" , "Rates" ,"value")
+cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+
+# Figure 2C Marginal variances
+ni.dc3<-ggplot(data=melted.var.ni, aes(x=Var1,y=value,group=Rates,colour=Rates,shape=Rates)) +
+    geom_line(size=1) +
+    geom_point(size=2)+
+    ggtitle("Marginal variance")+
+  xlab("number of clones")+
+  ylab("Marginal variance ")+
+   scale_colour_manual(values=cbbPalette)+
+  theme_pubclean()
+
+favcol<-c("skyblue4","aquamarine4")
+dat.eigen<-data.frame(k.vec,eigen.mat)
+# Figure 2D Eigen values
+ni.dc4<- ggplot(data=dat.eigen, aes(x=k.vec,y=eigen.mat)) +
+  geom_line(color="aquamarine4",size=1) +
+  geom_point(color="aquamarine4",size=3)+
+  ggtitle("Eigenvalues")+
+  xlab("number of clones")+
+  ylab("Eigenvalues ")+
+  theme_pubclean()
+figure2 <- ggarrange(ni.dc1,ni.dc2,ni.dc3,ni.dc4,
+                    labels = c("A", "B", "C","D"),
+                    nrow = 2,ncol = 2)
+
+ggarrange(ni.dc1,ni.dc2,ni.dc3,ni.dc4,
+                    labels = c("A", "B", "C","D"),
+                    nrow = 2,ncol = 2)
+
+
+
+#split figure 2
+fig2a<-ggarrange(ni.dc1,ni.dc2,
+                    labels = c("A", "B"),
+                    nrow = 2)
+
+fig2b<-ggarrange(ni.dc3,ni.dc4,
+                    labels = c("C", "D"),
+                    nrow = 2)
+
+
+ggarrange(ni.dc1,ni.dc2,labels = c("A", "B"),nrow= 2) %>%
+ggexport(filename = "Figure2.jpeg")
+ggsave(filename="Figure2_high.png", plot=fig2a, device="png",dpi=500)
+
+ggarrange(ni.dc3,ni.dc4,labels = c("A", "B"),nrow = 2) %>%
+ggexport(filename = "Figure3.jpeg")
+ggsave(filename="Figure3_high.png", plot=fig2b, device="png",dpi=500)
+```
+# Table for non-identifiability
+```{r echo=FALSE,message=FALSE}
+#Table
+library(knitr)
+kable(mean.mat, caption="Data cloning on non-identifiable model")
+
+```
+
+
+
+```{r echo=FALSE}
+# Figure 1
+jpeg("DataCloneFigure1.jpeg")
+plot(figure1)
+dev.off()
+
+# Table 1
+jpeg(filename = "DataCloneTable1.jpeg")
+grid.table(round(clone.mat,digits = 4),theme=themeLastColored)
+dev.off()
+
+# Figure 2
+jpeg("DataCloneFigure2NI.jpeg")
+plot(figure2)
+dev.off()
+
+#Figure 2 A B
+jpeg("DataCloneFigure2NIsplita.jpeg")
+plot(fig2a)
+dev.off()
+
+# Figure 2 C D 
+jpeg("DataCloneFigure2NIsplitb.jpeg")
+plot(fig2b)
+dev.off()
+
+# Table 2
+library(gridExtra)
+jpeg(filename = "DataCloneTable2NI.jpeg")
+grid.table(round(mean.mat,digits = 4),theme=themeLastColored)
+dev.off()
+
+
+```
+
