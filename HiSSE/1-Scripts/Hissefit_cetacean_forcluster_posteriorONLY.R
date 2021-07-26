@@ -2,7 +2,7 @@
 #Script for simulating trees hidden state using diversitree #
 #------------------------------------------------------------#
 # loading packages
-library(123)
+set.seed(123)
 library(diversitree)
 library(numDeriv)
 suppressWarnings(library(hisse)) # warnings added
@@ -28,7 +28,7 @@ trans.rates.nodual.allequal
 #---------------------------------------------------------------------#
 
 # MCMC 
-n.step<-100000 #MCMC simulation
+n.step<-15000 #MCMC simulation
 n.save<-n.step/100
 k.vec<-2 # Clone vector
 

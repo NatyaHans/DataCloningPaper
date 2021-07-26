@@ -4,7 +4,7 @@
 #SBATCH --mail-user=nhans@ufl.edu # Where to send mail
 #SBATCH --nodes=1  # Run all processes on a single node	
 #SBATCH --ntasks=1 # Run a single task
-#SBATCH --cpus-per-task=8 # Number of cores: Can also use -c=4
+#SBATCH --cpus-per-task=16 # Number of cores: Can also use -c=4
 #SBATCH --mem-per-cpu=1gb # Per processor memory
 #SBATCH -t 4-00:00:00     # Walltime
 #SBATCH -o HiSSECetacean.%j.out # Name output file

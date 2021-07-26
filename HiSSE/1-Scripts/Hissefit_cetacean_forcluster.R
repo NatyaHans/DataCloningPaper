@@ -51,7 +51,7 @@ temp.prior <-make.prior.exponential(1/(temp.p[1]+temp.p[3]))
 
 # Saving clone results
 
-results.clone<- array(0,c(n.save,length(temp.p),length(k.vec))) # Empty array for Posteriors of each MLE
+#results.clone<- array(0,c(n.save,length(temp.p),length(k.vec))) # Empty array for Posteriors of each MLE
 name.vec<-vector(mode="character", length=length(k.vec))  # Empty vector for MCMC simulation that work
 
 
@@ -63,7 +63,6 @@ for (k in k.vec){
    message.NH6<- paste("saving clones", k , sep= "")
    print(message.NH6)
    assign(paste("samples_clone_", k, sep=""), mcmc(lik.func, temp.p, nsteps=n.step, prior=temp.prior, lower=0, w=rep(1:20), print.every=0, k.clone=k,save.every=100,save.file=paste("clone_taxa_MCMC", n.tree ,"_",k,"_",mytimeHisse,"_",n.step,".csv",sep = "")))
-   results.clone[,,counter]<- as.matrix(eval(parse(text=paste("samples_clone_", k, sep="")))[,2:21])
    name.vec[counter]<-(paste("samples_clone_", k, sep=""))
    }
 print("writing results")
@@ -73,5 +72,6 @@ print("writing results")
 
 
 ### Writing into the files
+results.clone<- as.matrix(eval(parse(text=paste("samples_clone_", k, sep=""))))
 write.csv(results.clone,file=paste("clone_taxa", n.tree ,"_",k,"_",mytimeHisse,"_",n.step,".csv",sep = "")) 
 # clone result

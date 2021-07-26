@@ -1,0 +1,529 @@
+---
+title: "HiSSEChecks"
+output:
+  pdf_document: default
+  html_notebook: default
+  html_document:
+    df_print: paged
+---
+
+```{r echo=FALSE, include=FALSE}
+setwd("/Users/nhans/DiversificationPaper/Diversification2020/")
+source("HiSSEplots-cetacean.R")
+```
+
+# (I) Parameter combinations - 
+## A) Turnover rates
+### 1. Checks for addition $\tau_{0A}+\tau_{0B}$ AND $\tau_{1A} + \tau_{1B}$ 
+
+My reason behind adding turnover rates for state 0A  and 0B into state 0 and state 1A and 1B to state 1, is that this should be  similar to BiSSE if we reparameterize BiSSE as $\lambda_{0} + \mu_{0}$ and $\lambda_{1} + \mu_{1}$. 
+```{r tau0_tau1, echo=FALSE, warning=FALSE}
+#Format  1=0A, 2=1A, 3=0B, 4=1B
+tau_state0 <- tau1.his.clone + tau3.his.clone
+tau_state1 <- tau2.his.clone + tau4.his.clone
+
+# for 0A+0B
+#pdf("tau_0.pdf")
+par(mfrow=c(3,3))
+count<-1
+for (k in k.vec){
+hist(tau_state0[,count],main=k,col =cbbPalette[1] ,xlim = c(0,1),xlab=expression(bold(tau[0][A]+tau[0][B])))
+count<-count+1
+}
+mtext(expression(bold(tau[0][A]+tau[0][B])), side =3, line = -1.5, outer = TRUE)
+##dev.off()
+
+# for 1A+1B
+#pdf("tau_1.pdf")
+par(mfrow=c(3,3))
+count<-1
+for (k in k.vec){
+hist(tau_state1[,count],main=k,col =cbbPalette[2],xlim = c(0,1),xlab=expression(bold(tau[1][A]+tau[1][B])))
+count<-count+1
+}
+mtext(expression(bold(tau[1][A]+tau[1][B])), side =3, line = -1.5, outer = TRUE)
+#dev.off()
+```
+
+### 2. Checks for addition $\tau_{0A}+\tau_{1A}$ AND $\tau_{0B} + \tau_{1B}$ 
+Here I am checking if hidden states have a signal in turnover rates  i.e. if the two rate classes A and B can also be combined. Here state A is represented by the sum $\tau_{0A}+\tau_{1A}$ and state B is represented by the sum $\tau_{0B} + \tau_{1B}$. 
+
+```{r tauA_tauB, warning=FALSE,echo=FALSE}
+#Format  1=0A, 2=1A, 3=0B, 4=1B.
+tau_stateA <- tau1.his.clone + tau2.his.clone
+tau_stateB <- tau3.his.clone + tau4.his.clone
+
+# for 0A+1A
+##pdf("tau_A.pdf")
+par(mfrow=c(3,3))
+count<-1
+for (k in k.vec){
+hist(tau_stateA[,count],main=k,col =cbbPalette[3],xlim = c(0,1),xlab=expression(bold(tau[0][A]+tau[1][A])))
+count<-count+1
+}
+mtext(expression(bold(tau[0][A]+tau[1][A])), side =3, line = -1.5, outer = TRUE)
+#dev.off()
+
+# for 0B+1B
+#pdf("tau_B.pdf")
+par(mfrow=c(3,3))
+count<-1
+for (k in k.vec){
+hist(tau_stateB[,count],main=k,col =cbbPalette[4],xlim = c(0,1),xlab=expression(bold(tau[0][B]+tau[1][B])))
+count<-count+1
+}
+mtext(expression(bold(tau[0][B]+tau[1][B])), side =3, line = -1.5, outer = TRUE)
+#dev.off()
+```
+
+
+## B) Speciation rates
+### 1. Checks for addition $\lambda_{0A}+\lambda_{0B}$ AND $\lambda_{1A} + \lambda_{1B}$ 
+My reason behind adding speciation rates for state 0A  and 0B into state 0 and state 1A and 1B to state 1, is that this should reduce to BiSSE for the following reparameterization $\lambda_{0A} + \lambda_{0B}$ and $\lambda_{1A} + \lambda_{1B}$. 
+```{r lambda0_lambda1, warning=FALSE,echo=FALSE}
+#Format  1=0A, 2=1A, 3=0B, 4=1B
+lambda_state0 <- lambda1.his.clone + lambda3.his.clone
+lambda_state1 <- lambda2.his.clone + lambda4.his.clone
+
+# for 0A+0B
+#pdf("lambda_0.pdf")
+par(mfrow=c(3,3))
+count<-1
+for (k in k.vec){
+hist(lambda_state0[,count],main=k,col =cbbPalette[1] ,xlim = c(0,0.8),xlab=expression(bold(lambda[0][A]+lambda[0][B])))
+count<-count+1
+}
+mtext(expression(bold(lambda[0][A]+lambda[0][B])), side =3, line = -1.5, outer = TRUE)
+#dev.off()
+
+# for 1A+1B
+#pdf("lambda_1.pdf")
+par(mfrow=c(3,3))
+count<-1
+for (k in k.vec){
+hist(lambda_state1[,count],main=k,col =cbbPalette[2],xlim = c(0,0.8),xlab=expression(bold(lambda[1][A]+lambda[1][B])))
+count<-count+1
+}
+mtext(expression(bold(lambda[1][A]+lambda[1][B])), side =3, line = -1.5, outer = TRUE)
+#dev.off()
+```
+
+
+### 2. Checks for addition $\lambda_{0A}+\lambda_{1A}$ AND $\lambda_{0B} + \lambda_{1B}$ 
+Here I am checking if hidden states have a signal in speciation rates  i.e. if the two rate classes A and B can also be combined. Here state A is represented by the sum $\lambda_{0A}+\lambda_{1A}$ and state B is represented by the sum $\lambda_{0B} + \lambda_{1B}$. 
+
+```{r lambdaA_lambda1, warning=FALSE,echo=FALSE}
+#Format  1=0A, 2=1A, 3=0B, 4=1B.
+lambda_stateA <- lambda1.his.clone + lambda2.his.clone
+lambda_stateB <- lambda3.his.clone + lambda4.his.clone
+
+# for 0A+1A
+#pdf("lambda_A.pdf")
+par(mfrow=c(3,3))
+count<-1
+for (k in k.vec){
+hist(lambda_stateA[,count],main=k,col =cbbPalette[3],xlim = c(0,0.8),xlab=expression(bold(lambda[0][A]+lambda[1][A])))
+count<-count+1
+}
+mtext(expression(bold(lambda[0][A]+lambda[1][A])), side =3, line = -1.5, outer = TRUE)
+#dev.off()
+
+# for 0B+1B
+#pdf("lambda_B.pdf")
+par(mfrow=c(3,3))
+count<-1
+for (k in k.vec){
+hist(lambda_stateB[,count],main=k,col =cbbPalette[4],xlim = c(0,0.8),xlab=expression(bold(lambda[0][B]+lambda[1][B])))
+count<-count+1
+}
+mtext(expression(bold(lambda[0][B]+lambda[1][B])), side =3, line = -1.5, outer = TRUE)
+#dev.off()
+```
+
+## C) Extinction fractions
+### 1. Checks for addition $\epsilon_{0A}+\epsilon_{0B}$ AND $\epsilon_{1A} + \epsilon_{1B}$ 
+Here we are adding extinction fractions rates for state 0A  and 0B into state 0 and state 1A and 1B to state 1, is that this should be  similar to BiSSE if we reparameterize the BiSSE model in terms of extinction fraction such as   $\epsilon_{0A} + \epsilon_{0B}$ and $\epsilon_{1A} + \epsilon_{1B}$. 
+```{r epsilon0_epsilon1, warning=FALSE,echo=FALSE}
+#Format  1=0A, 2=1A, 3=0B, 4=1B
+ep_state0 <- ep1.his.clone + ep3.his.clone
+ep_state1 <- ep2.his.clone + ep4.his.clone
+
+# for 0A+0B
+#pdf("epsilon_0.pdf")
+par(mfrow=c(3,3))
+count<-1
+for (k in k.vec){
+hist(ep_state0[,count],main=k,col =cbbPalette[1] ,xlim = c(0,1),xlab=expression(bold(epsilon[0][A]+epsilon[0][B])))
+count<-count+1
+}
+mtext(expression(bold(epsilon[0][A]+epsilon[0][B])), side =3, line = -1.5, outer = TRUE)
+#dev.off()
+
+# for 1A+1B
+#pdf("epsilon_1.pdf")
+par(mfrow=c(3,3))
+count<-1
+for (k in k.vec){
+hist(ep_state1[,count],main=k,col =cbbPalette[2],xlim = c(0,1),xlab=expression(bold(epsilon[1][A]+epsilon[1][B])))
+count<-count+1
+}
+mtext(expression(bold(epsilon[1][A]+epsilon[1][B])), side =3, line = -1.5, outer = TRUE)
+#dev.off()
+```
+
+
+### 2. Checks for addition $\epsilon_{0A}+\epsilon_{1A}$ AND $\epsilon_{0B} + \epsilon_{1B}$ 
+Checking if the hidden states have a signal when combining extinction fractions  i.e. if the two rate classes A and B can also be combined. Here state A is represented by the sum $\epsilon_{0A}+\epsilon_{1A}$ and state B is represented by the sum $\epsilon_{0B} + \epsilon_{1B}$. 
+
+```{r epsilonA_epsilonB, warning=FALSE,echo=FALSE}
+#Format  1=0A, 2=1A, 3=0B, 4=1B.
+ep_stateA <- ep1.his.clone + ep2.his.clone
+ep_stateB <- ep3.his.clone + ep4.his.clone
+
+# for 0A+1A
+#pdf("epsilon_A.pdf")
+par(mfrow=c(3,3))
+count<-1
+for (k in k.vec){
+hist(ep_stateA[,count],main=k,col =cbbPalette[3],xlim = c(0,1),xlab=expression(bold(epsilon[0][A]+epsilon[1][A])))
+count<-count+1
+}
+mtext(expression(bold(epsilon[0][A]+epsilon[1][A])), side =3, line = -1.5, outer = TRUE)
+#dev.off()
+
+# for 0B+1B
+#pdf("epsilon_B.pdf")
+par(mfrow=c(3,3))
+count<-1
+for (k in k.vec){
+hist(ep_stateB[,count],main=k,col =cbbPalette[4],xlim = c(0,1),xlab=expression(bold(epsilon[0][B]+epsilon[1][B])))
+count<-count+1
+}
+mtext(expression(bold(epsilon[0][B]+epsilon[1][B])), side =3, line = -1.5, outer = TRUE)
+#dev.off()
+```
+
+## D) Extinction rates
+### 1. Checks for addition $\mu_{0A}+\mu_{0B}$ AND $\mu_{1A} + \mu_{1B}$ 
+
+I am adding the extinction rates for state 0A  and 0B into state 0 and state 1A and 1B to state 1. By doing this the model reduces to BiSSE such that  $\mu_0 = \mu_{0A} + \mu_{0B}$ and $\mu_1= \mu_{1A} + \mu_{1B}$.
+```{r mu0_mu1, warning=FALSE,echo=FALSE}
+#Format  1=0A, 2=1A, 3=0B, 4=1B
+mu_state0 <- mu1.his.clone + mu3.his.clone
+mu_state1 <- mu2.his.clone + mu4.his.clone
+
+# for 0A+0B
+#pdf("mu_0.pdf")
+par(mfrow=c(3,3))
+count<-1
+for (k in k.vec){
+hist(mu_state0[,count],main=k,col =cbbPalette[1] ,xlim = c(0,0.5),xlab=expression(bold(mu[0][A]+mu[0][B])))
+count<-count+1
+}
+mtext(expression(bold(mu[0][A]+mu[0][B])), side =3, line = -1.5, outer = TRUE)
+#dev.off()
+
+# for 1A+1B
+#pdf("mu_1.pdf")
+par(mfrow=c(3,3))
+count<-1
+for (k in k.vec){
+hist(mu_state1[,count],main=k,col =cbbPalette[2],xlim = c(0,0.5),xlab=expression(bold(mu[1][A]+mu[1][B])))
+count<-count+1
+}
+mtext(expression(bold(mu[1][A]+mu[1][B])), side =3, line = -1.5, outer = TRUE)
+#dev.off()
+```
+
+
+### 2. Checks for addition $\mu_{0A}+\mu_{1A}$ AND $\mu_{0B} + \mu_{1B}$ 
+Checking if hidden states have a signal when combining extinction rates  i.e. if the two rate classes A and B can also be combined. Here state A is represented by the sum $\mu_{0A}+\mu_{1A}$ and state B is represented by the sum $\mu_{0B} + \mu_{1B}$. 
+
+```{r muA_muB, warning=FALSE,echo=FALSE}
+#Format  1=0A, 2=1A, 3=0B, 4=1B.
+mu_stateA <- mu1.his.clone + mu2.his.clone
+mu_stateB <- mu3.his.clone + mu4.his.clone
+
+# for 0A+1A
+#pdf("mu_A.pdf")
+par(mfrow=c(3,3))
+count<-1
+for (k in k.vec){
+hist(mu_stateA[,count],main=k,col =cbbPalette[3],xlim = c(0,0.5),xlab=expression(bold(mu[0][A]+mu[1][A])))
+count<-count+1
+}
+mtext(expression(bold(mu[0][A]+mu[1][A])), side =3, line = -1.5, outer = TRUE)
+#dev.off()
+
+# for 0B+1B
+#pdf("mu_B.pdf")
+par(mfrow=c(3,3))
+count<-1
+for (k in k.vec){
+hist(mu_stateB[,count],main=k,col =cbbPalette[4],xlim = c(0,0.5),xlab=expression(bold(mu[0][B]+mu[1][B])))
+count<-count+1
+}
+mtext(expression(bold(mu[0][B]+mu[1][B])), side =3, line = -1.5, outer = TRUE)
+#dev.off()
+```
+
+# (II) Diversification rates check "r":
+A) Checking if $r_{0A}/r_{1A}$ and $r_{0B}/r_{1B}$ are convergent.
+i.e. diversification rate differences per state, which checks whether state 0 has a different diversification rate than state 1
+
+
+B) Checking $r_{0A}/r_{0B}$ and $r_{1A}/r_{1B}$.
+i.e. diversification rate differences per hidden state i.e if hidden state for state 0 is different than what is observed (separating the main effect vs. the noise)
+
+```{r divrates, warning=FALSE,echo=FALSE}
+div.rate1<-lambda1.his.clone - mu1.his.clone
+div.rate2<-lambda2.his.clone - mu2.his.clone
+div.rate3<-lambda3.his.clone - mu3.his.clone
+div.rate4<-lambda4.his.clone - mu4.his.clone
+```
+
+## A) $r_{0A}/r_{1A}$ and $r_0B/r_1B$. - Checking convergence
+
+```{r r0_r1, warning=FALSE,echo=FALSE}
+#Format  1=0A, 2=1A, 3=0B, 4=1B.
+div_0A_1A <- div.rate1 / div.rate2
+div_0B_1B <- div.rate3 / div.rate4
+
+# for 0A/1A
+#pdf("r_0A_1A.pdf")
+par(mfrow=c(3,3))
+count<-1
+for (k in k.vec){
+hist(div_0A_1A[,count],main=k,col =cbbPalette[5], xlab=expression(bold(r[0][A]/r[1][A])))
+count<-count+1
+}
+mtext("Diversification 0A/1A", side =3, line = -1.25, outer = TRUE)
+#dev.off()
+
+# for 0B/1B
+#pdf("r_0B_1B.pdf")
+par(mfrow=c(3,3))
+count<-1
+for (k in k.vec){
+hist(div_0B_1B[,count],main=k,col =cbbPalette[6],xlab=expression(bold(r[0][B]/r[1][B])))
+count<-count+1
+}
+mtext("Diversification 0B/1B", side =3, line = -1.25, outer = TRUE)
+#dev.off()
+```
+
+## B) $r_{0A}/r_{0B}$ annd $r_{1A}/r_{1B}$ - Checking Noise
+```{r rA_rB, warning=FALSE,echo=FALSE}
+#Format  1=0A, 2=1A, 3=0B, 4=1B.
+div_0A_0B <- div.rate1 / div.rate3
+div_1A_1B <- div.rate2 / div.rate4
+
+# for 0A/0B
+#pdf("r_0A_0B.pdf")
+par(mfrow=c(3,3))
+count<-1
+for (k in k.vec){
+hist(div_0A_0B[,count],main=k,col =cbbPalette[7], xlab=expression(bold(r[0][A]/r[0][B])))
+count<-count+1
+}
+mtext("Diversification 0A/0B", side =3, line = -1.25, outer = TRUE)
+#dev.off()
+
+# for 1A/1B
+#pdf("r_1A_1B.pdf")
+par(mfrow=c(3,3))
+count<-1
+for (k in k.vec){
+hist(div_1A_1B[,count],main=k,col =cbbPalette[8],xlab=expression(bold(r[1][A]/r[1][B])))
+count<-count+1
+}
+mtext("Diversification 1A/1B", side =3, line = -1.25, outer = TRUE)
+#dev.off()
+```
+# Why we might be seeing the above results
+## 1. Distribution of lambda and mu and diversification rates for each clone
+These boxplots show the distribution of speciation rates $\lambda_{0A},\lambda_{1A},\lambda_{0B},\lambda_{1B}$ and extinction rates $\mu_{0A},\mu_{1A},\mu_{0B},\mu_{1B}$ calculated from HiSSE's turnover rates and extinction fractions.
+
+Please note that for some clones the extinction rate is high leading to negative diversification rates. I added a line y=0 in diversification rates distribution plot to demonstrate that point. 
+
+```{r}
+#Format  1=0A, 2=1A, 3=0B, 4=1B.
+
+# speciation rates distribution
+#pdf("speciationRateDistribution.pdf")
+par(mfrow=c(2,2))
+boxplot(lambda1.his.clone, main=expression(lambda[0][A]),ylab="Rates",xlab="clones")
+boxplot(lambda2.his.clone, main=expression(lambda[1][A]),ylab="Rates",xlab="clones")
+boxplot(lambda3.his.clone, main=expression(lambda[0][B]),ylab="Rates",xlab="clones")
+boxplot(lambda4.his.clone, main=expression(lambda[1][B]),ylab="Rates",xlab="clones")
+mtext("speciation rates distribution", side =3, line = -1.5, outer = TRUE)
+#dev.off()
+
+# extinction rates distribution
+#pdf("extinctionRateDistribution.pdf")
+par(mfrow=c(2,2))
+boxplot(mu1.his.clone, main=expression(mu[0][A]),xlab="clones",ylab="Rates")
+boxplot(mu2.his.clone, main=expression(mu[1][A]),xlab="clones",ylab="Rates")
+boxplot(mu3.his.clone, main=expression(mu[0][B]),xlab="clones",ylab="Rates")
+boxplot(mu4.his.clone, main=expression(mu[1][B]),xlab="clones",ylab="Rates")
+mtext("extinction rates distribution", side =3, line = -1.5, outer = TRUE)
+#dev.off()
+
+# diversification rates distribution
+#pdf("diversificationRateDistribution.pdf")
+par(mfrow=c(2,2))
+boxplot(div.rate1, main=expression(r[0][A]),xlab="clones",ylab="Rates")
+abline(h=0)
+boxplot(div.rate2, main=expression(r[1][A]),xlab="clones",ylab="Rates")
+abline(h=0)
+boxplot(div.rate3, main=expression(r[0][B]),xlab="clones",ylab="Rates")
+abline(h=0)
+boxplot(div.rate4, main=expression(r[1][B]),xlab="clones",ylab="Rates")
+abline(h=0)
+mtext("diversification rates distribution", side =3, line = -1.5, outer = TRUE)
+#dev.off()
+```
+
+## 2.Removing the outliers 
+```{r ,echo=FALSE, warning=FALSE,include=FALSE}
+# Function for finding outlier position
+FindOutlierPos <- function(data) {
+  lowerq = quantile(data)[2]
+  upperq = quantile(data)[4]
+  iqr = upperq - lowerq 
+  # we identify extreme outliers
+  extreme.threshold.upper = (iqr * 1.5) + upperq
+  extreme.threshold.lower = lowerq - (iqr * 1.5)
+  result <- which(data > extreme.threshold.upper | data < extreme.threshold.lower)
+}
+#--------
+
+#pos<-apply(lambda1.his.clone, 2, FindOutlierPos)
+
+
+# Function for finding outliers 
+outliers <- function(x) {
+
+  Q1 <- quantile(x)[2]
+  Q3 <- quantile(x)[4]
+  iqr = Q3-Q1
+
+ upper_limit = Q3 + (iqr*1.5)
+ lower_limit = Q1 - (iqr*1.5)
+
+ x > upper_limit | x < lower_limit
+}
+#------
+
+# Function for removing outlier by column ( calls outlier function above)
+remove_outliers <- function(df, cols = names(df)) {
+  for (col in cols) {
+    df <- df[!outliers(df[[col]]),]
+  }
+  df
+}
+#--------
+
+count<-1
+for (k in k.vec) {
+  #print(k)
+ 
+  
+   assign(paste("div1_","clone_",k,sep=""), div.rate1[which(outliers(div.rate1[,count])==FALSE)] )
+  assign(paste("div2_","clone_",k,sep = ""),div.rate2[which(outliers(div.rate2[,count])==FALSE)] )
+  assign(paste("div3_","clone_",k,sep=""), div.rate3[which(outliers(div.rate3[,count])==FALSE)] )
+  assign(paste("div4_","clone_",k,sep=""), div.rate4[which(outliers(div.rate4[,count])==FALSE)] )
+   print(count)
+   print("length of div1")
+   print(length(div.rate1[which(outliers(div.rate1[,count])==FALSE)]))
+  print("length of div2")
+   print(length(div.rate2[which(outliers(div.rate2[,count])==FALSE)]))
+   print("length of div3")
+   print(length(div.rate3[which(outliers(div.rate3[,count])==FALSE)]))
+   print("length of div4")
+   print(length(div.rate4[which(outliers(div.rate4[,count])==FALSE)]))
+   print("-------------------")
+  count<-count+1
+}
+
+x1<-cbind(div1_clone_2,div1_clone_4,div1_clone_8,div1_clone_16,div1_clone_32,div1_clone_64,div1_clone_128,div1_clone_256,div1_clone_512)
+x2<-cbind(div2_clone_2,div2_clone_4,div2_clone_8,div2_clone_16,div2_clone_32,div2_clone_64,div2_clone_128,div2_clone_256,div2_clone_512)
+x3<-cbind(div3_clone_2,div3_clone_4,div3_clone_8,div3_clone_16,div3_clone_32,div3_clone_64,div3_clone_128,div3_clone_256,div3_clone_512)
+x4<-cbind(div4_clone_2,div4_clone_4,div4_clone_8,div4_clone_16,div4_clone_32,div4_clone_64,div4_clone_128,div4_clone_256,div4_clone_512)
+colnames(x1)<-k.vec
+colnames(x2)<-k.vec
+colnames(x3)<-k.vec
+colnames(x4)<-k.vec
+```
+
+## 3. Distribution of diversification rates after removing outliers
+
+```{r}
+# Combine the above individual rates 
+#pdf("diversificationRateDistribution_outliersRemoved.pdf")
+par(mfrow=c(2,2))
+boxplot(x1,main=expression(r[0][A]),ylab="Rates",xlab="clones",ylim=c(0,0.5))
+boxplot(x2,main=expression(r[1][A]),ylab="Rates",xlab="clones",ylim=c(0,0.5))
+boxplot(x3,main=expression(r[0][B]),ylab="Rates",xlab="clones",ylim=c(0,0.5))
+boxplot(x4,main=expression(r[1][B]),ylab="Rates",xlab="clones",ylim=c(0,0.5))
+mtext("diversification rates distribution no outliers", side =3, line = -1.5, outer = TRUE)
+#dev.off()
+```
+### A) $r_{0A}/r_{1A}$ and $r_0B/r_1B$. - Checking convergence -Outliers removed
+
+```{r r0_r1_NoOut, warning=FALSE,echo=FALSE}
+#Format  1=0A, 2=1A, 3=0B, 4=1B.
+div_0A_1A <- div.rate1 / div.rate2
+div_0B_1B <- div.rate3 / div.rate4
+
+# for 0A/1A
+#pdf("r_0A_1A.pdf")
+par(mfrow=c(3,3))
+count<-1
+for (k in k.vec){
+hist(div_0A_1A[,count],main=k,col =cbbPalette[5], xlab=expression(bold(r[0][A]/r[1][A])))
+count<-count+1
+}
+mtext("Diversification 0A/1A - no outliers", side =3, line = -1.25, outer = TRUE)
+#dev.off()
+
+# for 0B/1B
+#pdf("r_0B_1B.pdf")
+par(mfrow=c(3,3))
+count<-1
+for (k in k.vec){
+hist(div_0B_1B[,count],main=k,col =cbbPalette[6],xlab=expression(bold(r[0][B]/r[1][B])))
+count<-count+1
+}
+mtext("Diversification 0B/1B - no outliers", side =3, line = -1.25, outer = TRUE)
+#dev.off()
+```
+
+## B) $r_{0A}/r_{0B}$ annd $r_{1A}/r_{1B}$ - Checking Noise - Outliers Removed
+```{r rA_rB_NoOut, warning=FALSE,echo=FALSE}
+#Format  1=0A, 2=1A, 3=0B, 4=1B.
+div_0A_0B <- div.rate1 / div.rate3
+div_1A_1B <- div.rate2 / div.rate4
+
+# for 0A/0B
+#pdf("r_0A_0B.pdf")
+par(mfrow=c(3,3))
+count<-1
+for (k in k.vec){
+hist(div_0A_0B[,count],main=k,col =cbbPalette[7], xlab=expression(bold(r[0][A]/r[0][B])))
+count<-count+1
+}
+mtext("Diversification 0A/0B - no outliers", side =3, line = -1.25, outer = TRUE)
+#dev.off()
+
+# for 1A/1B
+#pdf("r_1A_1B.pdf")
+par(mfrow=c(3,3))
+count<-1
+for (k in k.vec){
+hist(div_1A_1B[,count],main=k,col =cbbPalette[8],xlab=expression(bold(r[1][A]/r[1][B])))
+count<-count+1
+}
+mtext("Diversification 1A/1B - no outliers", side =3, line = -1.25, outer = TRUE)
+#dev.off()
+```
