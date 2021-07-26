@@ -16,14 +16,14 @@ source("HiSSEplots-cetacean.R")
 ## A) Turnover rates
 ### 1. Checks for addition $\tau_{0A}+\tau_{0B}$ AND $\tau_{1A} + \tau_{1B}$ 
 
-My reason behind adding turnover rates for state 0A  and 0B into state 0 and state 1A and 1B to state 1, is that this should be  similar to BiSSE if we convert the $\lambda_{0} + \mu_{0}$ and $\lambda_{1} + \mu_{1}$. 
-```{r tau0_tau1, warning=FALSE,echo=FALSE}
+My reason behind adding turnover rates for state 0A  and 0B into state 0 and state 1A and 1B to state 1, is that this should be  similar to BiSSE if we reparameterize BiSSE as $\lambda_{0} + \mu_{0}$ and $\lambda_{1} + \mu_{1}$. 
+```{r tau0_tau1, echo=FALSE, warning=FALSE}
 #Format  1=0A, 2=1A, 3=0B, 4=1B
 tau_state0 <- tau1.his.clone + tau3.his.clone
 tau_state1 <- tau2.his.clone + tau4.his.clone
 
 # for 0A+0B
-#pdf("tau_0.pdf")
+#png("tau_0.png")
 par(mfrow=c(3,3))
 count<-1
 for (k in k.vec){
@@ -31,10 +31,10 @@ hist(tau_state0[,count],main=k,col =cbbPalette[1] ,xlim = c(0,1),xlab=expression
 count<-count+1
 }
 mtext(expression(bold(tau[0][A]+tau[0][B])), side =3, line = -1.5, outer = TRUE)
-##dev.off()
+#dev.off()
 
 # for 1A+1B
-#pdf("tau_1.pdf")
+#png("tau_1.png")
 par(mfrow=c(3,3))
 count<-1
 for (k in k.vec){
@@ -54,7 +54,7 @@ tau_stateA <- tau1.his.clone + tau2.his.clone
 tau_stateB <- tau3.his.clone + tau4.his.clone
 
 # for 0A+1A
-##pdf("tau_A.pdf")
+#png("tau_A.png")
 par(mfrow=c(3,3))
 count<-1
 for (k in k.vec){
@@ -65,7 +65,7 @@ mtext(expression(bold(tau[0][A]+tau[1][A])), side =3, line = -1.5, outer = TRUE)
 #dev.off()
 
 # for 0B+1B
-#pdf("tau_B.pdf")
+#png("tau_B.png")
 par(mfrow=c(3,3))
 count<-1
 for (k in k.vec){
@@ -79,29 +79,29 @@ mtext(expression(bold(tau[0][B]+tau[1][B])), side =3, line = -1.5, outer = TRUE)
 
 ## B) Speciation rates
 ### 1. Checks for addition $\lambda_{0A}+\lambda_{0B}$ AND $\lambda_{1A} + \lambda_{1B}$ 
-My reason behind adding speciation rates for state 0A  and 0B into state 0 and state 1A and 1B to state 1, is that this should be  similar to BiSSE if we convert the $\lambda_{0} + \mu_{0}$ and $\lambda_{1} + \mu_{1}$. 
+My reason behind adding speciation rates for state 0A  and 0B into state 0 and state 1A and 1B to state 1, is that this should reduce to BiSSE for the following reparameterization $\lambda_{0A} + \lambda_{0B}$ and $\lambda_{1A} + \lambda_{1B}$. 
 ```{r lambda0_lambda1, warning=FALSE,echo=FALSE}
 #Format  1=0A, 2=1A, 3=0B, 4=1B
 lambda_state0 <- lambda1.his.clone + lambda3.his.clone
 lambda_state1 <- lambda2.his.clone + lambda4.his.clone
 
 # for 0A+0B
-#pdf("lambda_0.pdf")
+#png("lambda_0.png")
 par(mfrow=c(3,3))
 count<-1
 for (k in k.vec){
-hist(lambda_state0[,count],main=k,col =cbbPalette[1] ,xlim = c(0,1),xlab=expression(bold(lambda[0][A]+lambda[0][B])))
+hist(lambda_state0[,count],main=k,col =cbbPalette[1] ,xlim = c(0,0.8),xlab=expression(bold(lambda[0][A]+lambda[0][B])))
 count<-count+1
 }
 mtext(expression(bold(lambda[0][A]+lambda[0][B])), side =3, line = -1.5, outer = TRUE)
 #dev.off()
 
 # for 1A+1B
-#pdf("lambda_1.pdf")
+#png("lambda_1.png")
 par(mfrow=c(3,3))
 count<-1
 for (k in k.vec){
-hist(lambda_state1[,count],main=k,col =cbbPalette[2],xlim = c(0,1),xlab=expression(bold(lambda[1][A]+lambda[1][B])))
+hist(lambda_state1[,count],main=k,col =cbbPalette[2],xlim = c(0,0.8),xlab=expression(bold(lambda[1][A]+lambda[1][B])))
 count<-count+1
 }
 mtext(expression(bold(lambda[1][A]+lambda[1][B])), side =3, line = -1.5, outer = TRUE)
@@ -118,22 +118,22 @@ lambda_stateA <- lambda1.his.clone + lambda2.his.clone
 lambda_stateB <- lambda3.his.clone + lambda4.his.clone
 
 # for 0A+1A
-#pdf("lambda_A.pdf")
+#png("lambda_A.png")
 par(mfrow=c(3,3))
 count<-1
 for (k in k.vec){
-hist(lambda_stateA[,count],main=k,col =cbbPalette[3],xlim = c(0,1),xlab=expression(bold(lambda[0][A]+lambda[1][A])))
+hist(lambda_stateA[,count],main=k,col =cbbPalette[3],xlim = c(0,0.8),xlab=expression(bold(lambda[0][A]+lambda[1][A])))
 count<-count+1
 }
 mtext(expression(bold(lambda[0][A]+lambda[1][A])), side =3, line = -1.5, outer = TRUE)
 #dev.off()
 
 # for 0B+1B
-#pdf("lambda_B.pdf")
+#png("lambda_B.png")
 par(mfrow=c(3,3))
 count<-1
 for (k in k.vec){
-hist(lambda_stateB[,count],main=k,col =cbbPalette[4],xlim = c(0,1),xlab=expression(bold(lambda[0][B]+lambda[1][B])))
+hist(lambda_stateB[,count],main=k,col =cbbPalette[4],xlim = c(0,0.8),xlab=expression(bold(lambda[0][B]+lambda[1][B])))
 count<-count+1
 }
 mtext(expression(bold(lambda[0][B]+lambda[1][B])), side =3, line = -1.5, outer = TRUE)
@@ -142,14 +142,14 @@ mtext(expression(bold(lambda[0][B]+lambda[1][B])), side =3, line = -1.5, outer =
 
 ## C) Extinction fractions
 ### 1. Checks for addition $\epsilon_{0A}+\epsilon_{0B}$ AND $\epsilon_{1A} + \epsilon_{1B}$ 
-My reason behind adding extinction fractions rates for state 0A  and 0B into state 0 and state 1A and 1B to state 1, is that this should be  similar to BiSSE if we convert the $\epsilon_{0} + \epsilon_{0}$ and $\epsilon_{1} + \epsilon_{1}$. 
+Here we are adding extinction fractions rates for state 0A  and 0B into state 0 and state 1A and 1B to state 1, is that this should be  similar to BiSSE if we reparameterize the BiSSE model in terms of extinction fraction such as   $\epsilon_{0A} + \epsilon_{0B}$ and $\epsilon_{1A} + \epsilon_{1B}$. 
 ```{r epsilon0_epsilon1, warning=FALSE,echo=FALSE}
 #Format  1=0A, 2=1A, 3=0B, 4=1B
 ep_state0 <- ep1.his.clone + ep3.his.clone
 ep_state1 <- ep2.his.clone + ep4.his.clone
 
 # for 0A+0B
-#pdf("epsilon_0.pdf")
+#png("epsilon_0.png")
 par(mfrow=c(3,3))
 count<-1
 for (k in k.vec){
@@ -160,7 +160,7 @@ mtext(expression(bold(epsilon[0][A]+epsilon[0][B])), side =3, line = -1.5, outer
 #dev.off()
 
 # for 1A+1B
-#pdf("epsilon_1.pdf")
+#png("epsilon_1.png")
 par(mfrow=c(3,3))
 count<-1
 for (k in k.vec){
@@ -173,7 +173,7 @@ mtext(expression(bold(epsilon[1][A]+epsilon[1][B])), side =3, line = -1.5, outer
 
 
 ### 2. Checks for addition $\epsilon_{0A}+\epsilon_{1A}$ AND $\epsilon_{0B} + \epsilon_{1B}$ 
-Here I am checking if hidden states have a signal in extinction fractions  i.e. if the two rate classes A and B can also be combined. Here state A is represented by the sum $\epsilon_{0A}+\epsilon_{1A}$ and state B is represented by the sum $\epsilon_{0B} + \epsilon_{1B}$. 
+Checking if the hidden states have a signal when combining extinction fractions  i.e. if the two rate classes A and B can also be combined. Here state A is represented by the sum $\epsilon_{0A}+\epsilon_{1A}$ and state B is represented by the sum $\epsilon_{0B} + \epsilon_{1B}$. 
 
 ```{r epsilonA_epsilonB, warning=FALSE,echo=FALSE}
 #Format  1=0A, 2=1A, 3=0B, 4=1B.
@@ -181,7 +181,7 @@ ep_stateA <- ep1.his.clone + ep2.his.clone
 ep_stateB <- ep3.his.clone + ep4.his.clone
 
 # for 0A+1A
-#pdf("epsilon_A.pdf")
+#png("epsilon_A.png")
 par(mfrow=c(3,3))
 count<-1
 for (k in k.vec){
@@ -192,7 +192,7 @@ mtext(expression(bold(epsilon[0][A]+epsilon[1][A])), side =3, line = -1.5, outer
 #dev.off()
 
 # for 0B+1B
-#pdf("epsilon_B.pdf")
+#png("epsilon_B.png")
 par(mfrow=c(3,3))
 count<-1
 for (k in k.vec){
@@ -205,25 +205,26 @@ mtext(expression(bold(epsilon[0][B]+epsilon[1][B])), side =3, line = -1.5, outer
 
 ## D) Extinction rates
 ### 1. Checks for addition $\mu_{0A}+\mu_{0B}$ AND $\mu_{1A} + \mu_{1B}$ 
-My reason behind adding extinction rates for state 0A  and 0B into state 0 and state 1A and 1B to state 1, is that this should be  similar to BiSSE if we convert the $\mu_{0} + \mu_{0}$ and $\mu_{1} + \mu_{1}$. 
+
+I am adding the extinction rates for state 0A  and 0B into state 0 and state 1A and 1B to state 1. By doing this the model reduces to BiSSE such that  $\mu_0 = \mu_{0A} + \mu_{0B}$ and $\mu_1= \mu_{1A} + \mu_{1B}$.
 ```{r mu0_mu1, warning=FALSE,echo=FALSE}
 #Format  1=0A, 2=1A, 3=0B, 4=1B
 mu_state0 <- mu1.his.clone + mu3.his.clone
 mu_state1 <- mu2.his.clone + mu4.his.clone
 
 # for 0A+0B
-#pdf("mu_0.pdf")
+#png("mu_0.png")
 par(mfrow=c(3,3))
 count<-1
 for (k in k.vec){
 hist(mu_state0[,count],main=k,col =cbbPalette[1] ,xlim = c(0,0.5),xlab=expression(bold(mu[0][A]+mu[0][B])))
 count<-count+1
 }
-mtext("0A+0B", side =3, line = -1.5, outer = TRUE)
+mtext(expression(bold(mu[0][A]+mu[0][B])), side =3, line = -1.5, outer = TRUE)
 #dev.off()
 
 # for 1A+1B
-#pdf("mu_1.pdf")
+#png("mu_1.png")
 par(mfrow=c(3,3))
 count<-1
 for (k in k.vec){
@@ -236,7 +237,7 @@ mtext(expression(bold(mu[1][A]+mu[1][B])), side =3, line = -1.5, outer = TRUE)
 
 
 ### 2. Checks for addition $\mu_{0A}+\mu_{1A}$ AND $\mu_{0B} + \mu_{1B}$ 
-Here I am checking if hidden states have a signal in extinction rates  i.e. if the two rate classes A and B can also be combined. Here state A is represented by the sum $\mu_{0A}+\mu_{1A}$ and state B is represented by the sum $\mu_{0B} + \mu_{1B}$. 
+Checking if hidden states have a signal when combining extinction rates  i.e. if the two rate classes A and B can also be combined. Here state A is represented by the sum $\mu_{0A}+\mu_{1A}$ and state B is represented by the sum $\mu_{0B} + \mu_{1B}$. 
 
 ```{r muA_muB, warning=FALSE,echo=FALSE}
 #Format  1=0A, 2=1A, 3=0B, 4=1B.
@@ -244,7 +245,7 @@ mu_stateA <- mu1.his.clone + mu2.his.clone
 mu_stateB <- mu3.his.clone + mu4.his.clone
 
 # for 0A+1A
-#pdf("mu_A.pdf")
+#png("mu_A.png")
 par(mfrow=c(3,3))
 count<-1
 for (k in k.vec){
@@ -255,7 +256,7 @@ mtext(expression(bold(mu[0][A]+mu[1][A])), side =3, line = -1.5, outer = TRUE)
 #dev.off()
 
 # for 0B+1B
-#pdf("mu_B.pdf")
+#png("mu_B.png")
 par(mfrow=c(3,3))
 count<-1
 for (k in k.vec){
@@ -289,7 +290,7 @@ div_0A_1A <- div.rate1 / div.rate2
 div_0B_1B <- div.rate3 / div.rate4
 
 # for 0A/1A
-#pdf("r_0A_1A.pdf")
+#png("r_0A_1A.png")
 par(mfrow=c(3,3))
 count<-1
 for (k in k.vec){
@@ -300,7 +301,7 @@ mtext("Diversification 0A/1A", side =3, line = -1.25, outer = TRUE)
 #dev.off()
 
 # for 0B/1B
-#pdf("r_0B_1B.pdf")
+#png("r_0B_1B.png")
 par(mfrow=c(3,3))
 count<-1
 for (k in k.vec){
@@ -318,7 +319,7 @@ div_0A_0B <- div.rate1 / div.rate3
 div_1A_1B <- div.rate2 / div.rate4
 
 # for 0A/0B
-#pdf("r_0A_0B.pdf")
+#png("r_0A_0B.png")
 par(mfrow=c(3,3))
 count<-1
 for (k in k.vec){
@@ -329,7 +330,7 @@ mtext("Diversification 0A/0B", side =3, line = -1.25, outer = TRUE)
 #dev.off()
 
 # for 1A/1B
-#pdf("r_1A_1B.pdf")
+#png("r_1A_1B.png")
 par(mfrow=c(3,3))
 count<-1
 for (k in k.vec){
@@ -349,7 +350,7 @@ Please note that for some clones the extinction rate is high leading to negative
 #Format  1=0A, 2=1A, 3=0B, 4=1B.
 
 # speciation rates distribution
-#pdf("speciationRateDistribution.pdf")
+#png("speciationRateDistribution.png")
 par(mfrow=c(2,2))
 boxplot(lambda1.his.clone, main=expression(lambda[0][A]),ylab="Rates",xlab="clones")
 boxplot(lambda2.his.clone, main=expression(lambda[1][A]),ylab="Rates",xlab="clones")
@@ -359,7 +360,7 @@ mtext("speciation rates distribution", side =3, line = -1.5, outer = TRUE)
 #dev.off()
 
 # extinction rates distribution
-#pdf("extinctionRateDistribution.pdf")
+#png("extinctionRateDistribution.png")
 par(mfrow=c(2,2))
 boxplot(mu1.his.clone, main=expression(mu[0][A]),xlab="clones",ylab="Rates")
 boxplot(mu2.his.clone, main=expression(mu[1][A]),xlab="clones",ylab="Rates")
@@ -369,7 +370,7 @@ mtext("extinction rates distribution", side =3, line = -1.5, outer = TRUE)
 #dev.off()
 
 # diversification rates distribution
-#pdf("diversificationRateDistribution.pdf")
+#png("diversificationRateDistribution.png")
 par(mfrow=c(2,2))
 boxplot(div.rate1, main=expression(r[0][A]),xlab="clones",ylab="Rates")
 abline(h=0)
@@ -459,12 +460,70 @@ colnames(x4)<-k.vec
 
 ```{r}
 # Combine the above individual rates 
-#pdf("diversificationRateDistribution_outliersRemoved.pdf")
+#png("diversificationRateDistribution_outliersRemoved.png")
 par(mfrow=c(2,2))
 boxplot(x1,main=expression(r[0][A]),ylab="Rates",xlab="clones",ylim=c(0,0.5))
 boxplot(x2,main=expression(r[1][A]),ylab="Rates",xlab="clones",ylim=c(0,0.5))
 boxplot(x3,main=expression(r[0][B]),ylab="Rates",xlab="clones",ylim=c(0,0.5))
 boxplot(x4,main=expression(r[1][B]),ylab="Rates",xlab="clones",ylim=c(0,0.5))
 mtext("diversification rates distribution no outliers", side =3, line = -1.5, outer = TRUE)
+#dev.off()
+```
+### A) $r_{0A}/r_{1A}$ and $r_0B/r_1B$. - Checking convergence -Outliers removed
+
+```{r r0_r1_NoOut, warning=FALSE,echo=FALSE}
+#Format  1=0A, 2=1A, 3=0B, 4=1B.
+div_0A_1A <- div.rate1 / div.rate2
+div_0B_1B <- div.rate3 / div.rate4
+
+# for 0A/1A
+#png("r_0A_1A.png")
+par(mfrow=c(3,3))
+count<-1
+for (k in k.vec){
+hist(div_0A_1A[,count],main=k,col =cbbPalette[5], xlab=expression(bold(r[0][A]/r[1][A])))
+count<-count+1
+}
+mtext("Diversification 0A/1A - no outliers", side =3, line = -1.25, outer = TRUE)
+#dev.off()
+
+# for 0B/1B
+#png("r_0B_1B.png")
+par(mfrow=c(3,3))
+count<-1
+for (k in k.vec){
+hist(div_0B_1B[,count],main=k,col =cbbPalette[6],xlab=expression(bold(r[0][B]/r[1][B])))
+count<-count+1
+}
+mtext("Diversification 0B/1B - no outliers", side =3, line = -1.25, outer = TRUE)
+#dev.off()
+```
+
+## B) $r_{0A}/r_{0B}$ annd $r_{1A}/r_{1B}$ - Checking Noise - Outliers Removed
+```{r rA_rB_NoOut, warning=FALSE,echo=FALSE}
+#Format  1=0A, 2=1A, 3=0B, 4=1B.
+div_0A_0B <- div.rate1 / div.rate3
+div_1A_1B <- div.rate2 / div.rate4
+
+# for 0A/0B
+#png("r_0A_0B.png")
+par(mfrow=c(3,3))
+count<-1
+for (k in k.vec){
+hist(div_0A_0B[,count],main=k,col =cbbPalette[7], xlab=expression(bold(r[0][A]/r[0][B])))
+count<-count+1
+}
+mtext("Diversification 0A/0B - no outliers", side =3, line = -1.25, outer = TRUE)
+#dev.off()
+
+# for 1A/1B
+#png("r_1A_1B.png")
+par(mfrow=c(3,3))
+count<-1
+for (k in k.vec){
+hist(div_1A_1B[,count],main=k,col =cbbPalette[8],xlab=expression(bold(r[1][A]/r[1][B])))
+count<-count+1
+}
+mtext("Diversification 1A/1B - no outliers", side =3, line = -1.25, outer = TRUE)
 #dev.off()
 ```
