@@ -12,7 +12,7 @@ colrs <- brewer.pal.info[brewer.pal.info$colorblind == TRUE, ]
 col_vec = unlist(mapply(brewer.pal, colrs$maxcolors, rownames(colrs)))
 col <- sample(col_vec, n)
 area <- rep(1,n)
-pie(area, col = col)
+#pie(area, col = col)
 ```
 
 
@@ -97,6 +97,8 @@ eigen.max.his.noclone<-max(eigen(cov(thin.his.no.clone))$values)
 eigen.max.his.noclone
 # [1] 0.06681723 with transition rates
 # [1] 0.048744829 without transition rates 
+# [1] 0.06682639  burnin discarded- not thinned
+# [1] 0.06875298  burnin not discarded- not thinned (ALL)
 
 # 2) REPARAMETERIZATION to LAMBDA AND MU
 # Reparameterizing the thinned no clones
@@ -104,6 +106,7 @@ lambda1.his.noclone<-thin.his.no.clone[,1]/(1+thin.his.no.clone[,5])
 lambda2.his.noclone<-thin.his.no.clone[,2]/(1+thin.his.no.clone[,6])
 lambda3.his.noclone<-thin.his.no.clone[,3]/(1+thin.his.no.clone[,7])
 lambda4.his.noclone<-thin.his.no.clone[,4]/(1+thin.his.no.clone[,8])
+
 
 mu1.his.noclone<- lambda1.his.noclone* thin.his.no.clone[,5]
 mu2.his.noclone<- lambda2.his.noclone* thin.his.no.clone[,6]
@@ -116,7 +119,7 @@ eigen.max.his.noclone.repara
 # [1] 0.06681723 - without transition rates 
 
 ```
- 
+
 # Turnover and extinction fraction
 ```{r}
 # CLONES----------------------------------------------------------------------------------
@@ -507,7 +510,7 @@ ggsave(filename="FigureS2_high.png", plot=figureS2, device="png",dpi=500)
 
 
 ```{r}
-figureTogether<-ggarrange(nrow = 2,ncol = 2, h1.turn,h1.repara,h2.turn,h2.repara,labels = c("A","B","C","D"))
+figureTogether<-ggarrange(nrow = 2,ncol = 2, h1.turn,h2.turn,h1.repara,h2.repara,labels = c("A","B","C","D"))
 
 h3.turn<-ggplot(data=dat.eig.his, aes(x=k.vec,y=eigenvals.hisse.turn)) +
   geom_line(color="aquamarine4",size=1) +
@@ -570,11 +573,122 @@ h5.repara<-ggplot(mu.var.hisse, aes(x=clone,y=value,group=Rates,colour=Rates,sha
         legend.title=element_text(size=8))
 
 # Marginal variances and eigenvalues
-figureTogether2<-ggarrange(nrow = 3,ncol = 2, h3.turn,h3.repara,h4.turn, h4.repara, h5.turn,h5.repara,labels = c("A","D","B","E","C","F"))
+figureTogether2<-ggarrange(nrow = 3,ncol = 2, h4.turn, h4.repara, h5.turn,h5.repara,h3.turn,h3.repara,labels = c("A","D","B","E","C","F"))
 
 ggsave(filename="FigureS3_high.png", plot=figureTogether, device="png",dpi=500)
 ggsave(filename="FigureS4_high.png", plot=figureTogether2, device="png",dpi=500)
 
 
+```
+# Separating all clones for Supplementary - turniver and extinction fractions
+```{r}
+
+tau1<-tau1.his.clone
+rownames(tau1)<-rep("tau1",l.thin)
+tau2<-tau2.his.clone
+rownames(tau2)<-rep("tau2",l.thin)
+tau3<-tau3.his.clone
+rownames(tau3)<-rep("tau3",l.thin)
+tau4<-tau4.his.clone
+rownames(tau4)<-rep("tau4",l.thin)
+
+melted.taus<-melt(rbind(tau1,tau2,tau3,tau4))
+#head(melt(rbind(tau1,tau2,tau3,tau4)))
+#tail(melt(rbind(tau1,tau2,tau3,tau4)))
+
+colnames(melted.taus)<-c("Rates","Clone","value")
+
+morecols<-c("lightseagreen","lightsalmon4","slateblue4","red4","#004949","#490092","#6db6ff","#924900")
+figureS5<-ggplot(melted.taus, aes(x=value,group=Rates,fill=Rates)) + 
+  geom_density(alpha=.5)+
+  facet_wrap(~ Clone)+
+  ggtitle("HiSSE turnover rates")+
+  xlim(0,0.5)+
+  #ylim(0,100)+
+  xlab(expression(tau))+
+  ylab("Density")+
+  scale_fill_manual(values=morecols[1:4])+
+  theme_pubclean()
+
+ep1<-ep1.his.clone
+rownames(ep1)<-rep("ep1",l.thin)
+ep2<-ep2.his.clone
+rownames(ep2)<-rep("ep2",l.thin)
+ep3<-ep3.his.clone
+rownames(ep3)<-rep("ep3",l.thin)
+ep4<-ep4.his.clone
+rownames(ep4)<-rep("ep4",l.thin)
+
+melted.eps<-melt(rbind(ep1,ep2,ep3,ep4))
+colnames(melted.eps)<-c("Rates","Clone","value")
+
+figureS6<-ggplot(melted.eps, aes(x=value,group=Rates,fill=Rates)) +
+  geom_density(alpha=.5)+
+  facet_wrap(~ Clone)+
+  ggtitle("HiSSE extinction fractions ")+
+  xlim(0,1)+
+  ylim(0,25)+
+  xlab(expression(epsilon))+
+  ylab("Density")+
+  scale_fill_manual(values=morecols[5:8])+
+  theme_pubclean()
+
+# Repara
+lambda1<-lambda1.his.clone
+rownames(lambda1)<-rep("lambda1",l.thin)
+lambda2<-lambda2.his.clone
+rownames(lambda2)<-rep("lambda2",l.thin)
+lambda3<-lambda3.his.clone
+rownames(lambda3)<-rep("lambda3",l.thin)
+lambda4<-lambda4.his.clone
+rownames(lambda4)<-rep("lambda4",l.thin)
+
+melted.lambdas<-melt(rbind(lambda1,lambda2,lambda3,lambda4))
+#head(melt(rbind(lambda1,lambda2,lambda3,lambda4)))
+#tail(melt(rbind(lambda1,lambda2,lambda3,lambda4)))
+
+colnames(melted.lambdas)<-c("Rates","Clone","value")
+
+morecols<-c("lightseagreen","lightsalmon4","slateblue4","red4","#004949","#490092","#6db6ff","#924900")
+figureS7<-ggplot(melted.lambdas, aes(x=value,group=Rates,fill=Rates)) + 
+  geom_density(alpha=.5)+
+  facet_wrap(~ Clone)+
+  ggtitle("HiSSE speciation rates")+
+  xlim(0,0.5)+
+  ylim(0,200)+
+  xlab(expression(lambda))+
+  ylab("Density")+
+  scale_fill_manual(values=morecols[1:4])+
+  theme_pubclean()
+
+mu1<-mu1.his.clone
+rownames(mu1)<-rep("mu1",l.thin)
+mu2<-mu2.his.clone
+rownames(mu2)<-rep("mu2",l.thin)
+mu3<-mu3.his.clone
+rownames(mu3)<-rep("mu3",l.thin)
+mu4<-mu4.his.clone
+rownames(mu4)<-rep("mu4",l.thin)
+
+melted.mus<-melt(rbind(mu1,mu2,mu3,mu4))
+colnames(melted.mus)<-c("Rates","Clone","value")
+
+figureS8<-ggplot(melted.mus, aes(x=value,group=Rates,fill=Rates)) +
+  geom_density(alpha=.5)+
+  facet_wrap(~ Clone)+
+  ggtitle("HiSSE extinction rates ")+
+  xlim(0,0.2)+
+  ylim(0,200)+
+  xlab(expression(mu))+
+  ylab("Density")+
+  scale_fill_manual(values=morecols[5:8])+
+  theme_pubclean()
+
+
+
+ggsave(filename="FigureS5_high.png", plot=figureS5, device="png",dpi=700) #turn
+ggsave(filename="FigureS6_high.png", plot=figureS6, device="png",dpi=700) # ep
+ggsave(filename="FigureS7_high.png", plot=figureS7, device="png",dpi=700) # lambda
+ggsave(filename="FigureS8_high.png", plot=figureS8, device="png",dpi=700) # mu
 ```
 

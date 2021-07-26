@@ -10,7 +10,52 @@ output:
 ```{r echo=FALSE, include=FALSE}
 setwd("/Users/nhans/DiversificationPaper/Diversification2020/")
 source("HiSSEplots-cetacean.R")
+
+# Generating colorblind friendly palette (30)
+library(RColorBrewer)
+n <- 30
+colrs <- brewer.pal.info[brewer.pal.info$colorblind == TRUE, ]
+col_vec = unlist(mapply(brewer.pal, colrs$maxcolors, rownames(colrs)))
+col <- sample(col_vec, n)
+#area <- rep(1,n)
+#pie(area, col = col)
 ```
+
+```{r}
+# Boxplots the original parameters
+par(mfrow=c(2,2))
+boxplot(tau1.his.clone, main=expression(bold(tau[0][A])),col=col[1],xlab="Clones")
+boxplot(tau2.his.clone, main=expression(bold(tau[1][A])),col=col[2],xlab="Clones")
+boxplot(tau3.his.clone, main=expression(bold(tau[0][B])),col=col[3],xlab="Clones")
+boxplot(tau4.his.clone, main=expression(bold(tau[1][B])),col=col[4],xlab="Clones")
+mtext(expression(bold(tau)), side =3, line = -1.5, outer = TRUE,cex = 2.5)
+
+
+par(mfrow=c(2,2))
+boxplot(ep1.his.clone, main=expression(bold(epsilon[0][A])),col=col[5])
+boxplot(ep2.his.clone, main=expression(bold(epsilon[1][A])),col=col[6])
+boxplot(ep3.his.clone, main=expression(bold(epsilon[0][B])),col=col[7])
+boxplot(ep4.his.clone, main=expression(bold(epsilon[1][B])),col=col[8])
+mtext(expression(bold(epsilon)), side =3, line = -1.5, outer = TRUE,cex = 2.5)
+
+
+# Boxplots of reparameterized parameters
+par(mfrow=c(2,2))
+boxplot(lambda1.his.clone, main=expression(bold(lambda[0][A])),col=col[5])
+boxplot(lambda2.his.clone, main=expression(bold(lambda[1][A])),col=col[6])
+boxplot(lambda3.his.clone, main=expression(bold(lambda[0][B])),col=col[7])
+boxplot(lambda4.his.clone, main=expression(bold(lambda[1][B])),col=col[8])
+mtext(expression(bold(lambda)), side =3, line = -1.5, outer = TRUE,cex = 2.5)
+
+par(mfrow=c(2,2))
+boxplot(mu1.his.clone, main=expression(bold(mu[0][A])),col=col[5])
+boxplot(mu2.his.clone, main=expression(bold(mu[1][A])),col=col[6])
+boxplot(mu3.his.clone, main=expression(bold(mu[0][B])),col=col[7])
+boxplot(mu4.his.clone, main=expression(bold(mu[1][B])),col=col[8])
+mtext(expression(bold(mu)), side =3, line = -1.5, outer = TRUE,cex = 2.5)
+```
+
+
 
 # (I) Parameter combinations - 
 ## A) Turnover rates
@@ -282,6 +327,8 @@ div.rate3<-lambda3.his.clone - mu3.his.clone
 div.rate4<-lambda4.his.clone - mu4.his.clone
 ```
 
+
+
 ## A) $r_{0A}/r_{1A}$ and $r_0B/r_1B$. - Checking convergence
 
 ```{r r0_r1, warning=FALSE,echo=FALSE}
@@ -473,8 +520,8 @@ mtext("diversification rates distribution no outliers", side =3, line = -1.5, ou
 
 ```{r r0_r1_NoOut, warning=FALSE,echo=FALSE}
 #Format  1=0A, 2=1A, 3=0B, 4=1B.
-div_0A_1A <- div.rate1 / div.rate2
-div_0B_1B <- div.rate3 / div.rate4
+div_0A_1A <- x1[1:1000,]/x2[1:1000,]
+div_0B_1B <- x3[1:1000,]/x4[1:1000,]
 
 # for 0A/1A
 #png("r_0A_1A.png")
@@ -502,8 +549,8 @@ mtext("Diversification 0B/1B - no outliers", side =3, line = -1.25, outer = TRUE
 ## B) $r_{0A}/r_{0B}$ annd $r_{1A}/r_{1B}$ - Checking Noise - Outliers Removed
 ```{r rA_rB_NoOut, warning=FALSE,echo=FALSE}
 #Format  1=0A, 2=1A, 3=0B, 4=1B.
-div_0A_0B <- div.rate1 / div.rate3
-div_1A_1B <- div.rate2 / div.rate4
+div_0A_0B <- x1[1:1000,]/x3[1:1000,]
+div_1A_1B <- x2[1:1000,]/x4[1:1000,]
 
 # for 0A/0B
 #png("r_0A_0B.png")
