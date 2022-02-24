@@ -1,3 +1,3 @@
 # DataCloningPaper
 
-Supplementary data for Systematic Biology Manuscript
+Supplementary data and code for Systematic Biology Manuscript
